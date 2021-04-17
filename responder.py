@@ -4,14 +4,15 @@ import docker
 import concurrent.futures
 import os
 import time
+from pathlib import Path
 
 app = Flask(__name__)
 db = 'nt.00'
 nid = '1'
-HOME = '$HOME/blast/'
+HOME = '/home/ec2-user/'
 #HOME = "C:\\Users\\Sean Nemtzow\\Documents\\blast\\"
 # in seconds
-tout = 60
+tout = 600
 
 
 def run_docker(qid):
@@ -34,6 +35,8 @@ def run_docker(qid):
     
     timeout_reached = True
     for i in range(tout):
+        container.reload()
+        print(container.status)
         if container.status == 'exited':
             timeout_reached = False
             break
@@ -72,6 +75,7 @@ def healthy():
 
 @app.route('/api/request/<qid>', methods=['POST', 'GET'])
 def process_request(qid):
+    print("Got request for: {}".format(qid))
     content = request.data.decode('UTF-8')
     fasta = os.path.join(HOME, "queries", "{}.fsa".format(qid))
     with open(fasta, "w+") as fast_f:
