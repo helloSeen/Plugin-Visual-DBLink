@@ -85,7 +85,7 @@ def process_request(qid):
         future = executor.submit(run_docker, qid)
         metrics = future.result()
         ip_add = request.remote_addr
-        url = "{}:80/node_data/{}".format(ip_add, qid)
+        url = "http://{}:80/node_data/{}".format(ip_add, qid)
         http_req.post(url, json=metrics)
         return "complete", 200
 
