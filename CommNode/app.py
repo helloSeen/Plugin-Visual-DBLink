@@ -194,3 +194,7 @@ def plugin_poll(qid):
             return "Query still in queue", 250
         else:
             return f"{status} out of {node_count} processes finished", 250
+
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=80)
