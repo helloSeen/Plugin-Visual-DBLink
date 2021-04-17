@@ -69,7 +69,7 @@ def run_docker(qid, remote_ip):
 
     #Send response
     url = "http://{}:80/node_data/{}".format(remote_ip, qid)
-    http_req.post(url, json=metrics)
+    http_req.post(url, json=r_dict)
 
 
 @app.route('/status')
