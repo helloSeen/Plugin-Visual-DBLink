@@ -1,7 +1,7 @@
 from flask import Flask, request, make_response
 import json
 import docker
-import concurrent.futures
+import threading
 import os
 import time
 from pathlib import Path
@@ -16,7 +16,7 @@ HOME = '/home/ec2-user/'
 tout = 600
 
 
-def run_docker(qid):
+def run_docker(qid, remote_ip):
     """ This function runs a blast search in a docker container, returns the top 10 results
         with score, query coverage, and percent identity
     """
@@ -66,7 +66,10 @@ def run_docker(qid):
     # Delete files when complete
     os.remove(local_r)
     os.remove(local_f)
-    return r_dict
+
+    #Send response
+    url = "http://{}:80/node_data/{}".format(remote_ip, qid)
+    http_req.post(url, json=metrics)
 
 
 @app.route('/status')
@@ -81,13 +84,10 @@ def process_request(qid):
     fasta = os.path.join(HOME, "queries", "{}.fsa".format(qid))
     with open(fasta, "w+") as fast_f:
         fast_f.write(content)
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        future = executor.submit(run_docker, qid)
-        metrics = future.result()
-        ip_add = request.remote_addr
-        url = "http://{}:80/node_data/{}".format(ip_add, qid)
-        http_req.post(url, json=metrics)
-        return "complete", 200
+    remote_ip = request.remote_addr
+    thread = threading.Thread(target=run_docker, args=(qid,remote_ip))
+    thread.start()
+    return "ok", 200
 
 
 def main():
