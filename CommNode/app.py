@@ -8,9 +8,8 @@ app = Flask(__name__)
 
 db_nodes = [
     
-    "http://localhost:8080/",
-    "http://localhost:8080/",
-    "http://localhost:8080/"
+"http://18.220.28.88/"
+
 ]
 
 node_count = len(db_nodes)
@@ -121,6 +120,7 @@ qtrack = QueryTracker(max_act_prot)
 
 @app.route('/status')
 def index():
+    print("Got status")
     return 'The server is running', 200
 
 @app.route('/plugin_request', methods=['GET', 'POST'])
@@ -129,9 +129,9 @@ def plugin_request():
     if request.method == 'POST':
         # Get the data being sent from the plugin
         sequence = request.data.decode('UTF-8')
-        # print(sequence)
         # Store sequence as a md5 hash
         seq_hash = hashlib.md5(sequence.encode()).hexdigest()
+        print("Got query from plugin "+seq_hash)
         # Add sequence hash to query tracker
         status = qtrack.new(seq_hash, sequence)
         # Check if duplicate request
@@ -143,6 +143,7 @@ def plugin_request():
         # Check if request stored in active process list
         if(status == 1):
             for db_node in db_nodes:
+                print("Sending to "+db_node)
                 url_post = db_node+"api/request/qid"+seq_hash
                 header = {'Content-Type':'text/plain'}
                 response = http_req.post(url_post, sequence, headers=header)
@@ -156,6 +157,7 @@ def node_data(qid):
         seq_hash = qid
         received_data = request.get_json()
         node_id = received_data['nid']
+        print("Received results from "+ str(node_id))
         results = received_data['results']
         qtrack.store_results(seq_hash, results)
         if qtrack.all_results_received(qid):
@@ -163,6 +165,7 @@ def node_data(qid):
             # Process results, then store with qid, ready for javascript
             data_ready = get_top_ten_results(results_list, qid)
             ready_results[qid] = data_ready
+            print("Results ready to be read")
             # Pop process from queue if there are waiting queries
             new_id = qtrack.insert_proc_from_queue()
             if new_id:
