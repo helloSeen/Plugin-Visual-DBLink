@@ -143,7 +143,7 @@ def plugin_request():
         # Check if request stored in active process list
         if(status == 1):
             for db_node in db_nodes:
-                url_post = db_node+"api/request?qid="+seq_hash
+                url_post = db_node+"api/request/qid"+seq_hash
                 header = {'Content-Type':'text/plain'}
                 response = http_req.post(url_post, sequence, headers=header)
             return seq_hash, 200
@@ -168,7 +168,7 @@ def node_data(qid):
             if new_id:
                 # Send request to process new query
                 for db_node in db_nodes:
-                    url_post = db_node+"api/request?qid="+new_id['qid']
+                    url_post = db_node+"api/request/"+new_id['qid']
                     header = {'Content-Type':'text/plain'}
                     response = http_req.post(url_post, new_id['sequence'], headers=header)
 
