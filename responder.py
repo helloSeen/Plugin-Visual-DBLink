@@ -74,7 +74,7 @@ def healthy():
 def process_request(qid):
     content = request.data.decode('UTF-8')
     fasta = os.path.join(HOME, "queries", "{}.fsa".format(qid))
-    with open(fasta, "w") as fast_f:
+    with open(fasta, "w+") as fast_f:
         fast_f.write(content)
     with concurrent.futures.ThreadPoolExecutor() as executor:
         future = executor.submit(run_docker, qid)
