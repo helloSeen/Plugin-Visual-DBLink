@@ -5,6 +5,7 @@ import concurrent.futures
 import os
 import time
 from pathlib import Path
+import requests as http_req
 
 app = Flask(__name__)
 db = 'nt.00'
@@ -83,7 +84,10 @@ def process_request(qid):
     with concurrent.futures.ThreadPoolExecutor() as executor:
         future = executor.submit(run_docker, qid)
         metrics = future.result()
-        return metrics
+        ip_add = request.remote_addr
+        url = "{}:80/node_data/{}".format(ip_add, qid)
+        http_req.post(url, json=metrics)
+        return "complete", 200
 
 
 def main():
