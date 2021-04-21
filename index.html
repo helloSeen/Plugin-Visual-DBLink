@@ -210,24 +210,39 @@
             var filtered_data = {};
 
             // Loads the drop down menu and table
-            function load(){
+            function load_drop(){
               var dropper = document.getElementById("dropdown")
-              var tabler = document.getElementById("dataTable")
               for (set in filtered_data){
                   // Please don't judge me
                   var tmp = document.createElement("dropdown-item");
-                  tmp.innerHTML = '<button class="dropdown-item" type="button" onClick="buttonCallback(this.textContent)">%ID%</button>';
+                  tmp.innerHTML = '<button class="dropdown-item" type="button" onClick="load_table(this.textContent)">%ID%</button>';
                   tmp.innerHTML = tmp.innerHTML.replace(/%ID%/g, filtered_data[set].id);
                   dropper.append(tmp)
               }
-              for (keys in filtered_data[0].data){
-                var rowCount = tabler.rows.length;
-                var row = tabler.insertRow(rowCount);
-                row.className = "d-flex";
-                row.insertCell(0).innerHTML = keys;
-              }
             }
 
+            function load_table(name){
+              var table = document.getElementById("dataTable")
+              // Quick way to wipe the rows
+              table.innerHTML = "";
+              // Get data for accession id
+              for (keys in filtered_data){
+                if (filtered_data[keys].id == name) {
+                    var data = filtered_data[keys].data;
+                    console.log(filtered_data[keys].data)
+                    for (datum in data){
+                      console.log(datum)
+                      var rowCount = table.rows.length;
+                      var row = table.insertRow(rowCount);
+                      row.className = "d-flex";
+                      row.id = keys;
+                      row.insertCell(0).innerHTML = datum;
+                      row.insertCell(1).innerHTML = filtered_data[keys].data[datum];
+                      }
+                      break
+                    }
+                }
+              }
             function onReady(callback) {
             var intervalID = window.setInterval(checkReady, 1000);
         
@@ -248,7 +263,7 @@
                             delete result.State;
                             json_data = result.results;
                             filtered_data = result.results;
-                            load()
+                            load_drop()
                             callback.call(this);
                         }
                     })
@@ -268,15 +283,6 @@
             show('container1', true);
             show('container2', true)
         });
-
-        function buttonCallback(textConent){
-            // Get data for accession id
-            for (keys in filtered_data){
-                if (filtered_data[keys].id == textConent) {
-
-                }
-              }
-        }
         
         </script>
     </body>
