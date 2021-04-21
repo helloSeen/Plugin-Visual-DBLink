@@ -189,6 +189,7 @@ def plugin_poll(qid):
     # and number of nodes waiting to hear back
     if qid in ready_results:
         payload = ready_results.pop(qid)
+        payload["State"] = "Done"
         # Check if needs to be turned into string
         return json.dumps(payload), 200
     else:
