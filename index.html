@@ -216,7 +216,7 @@
               for (set in filtered_data){
                   // Please don't judge me
                   var tmp = document.createElement("dropdown-item");
-                  tmp.innerHTML = '<button class="dropdown-item" type="button">%ID%</button>';
+                  tmp.innerHTML = '<button class="dropdown-item" type="button" onClick="buttonCallback(this.textContent)">%ID%</button>';
                   tmp.innerHTML = tmp.innerHTML.replace(/%ID%/g, filtered_data[set].id);
                   dropper.append(tmp)
               }
@@ -263,13 +263,20 @@
         function show(id, value) {
             document.getElementById(id).style.display = value ? 'block' : 'none';
         }
-        
         onReady(function () {
             show('loading', false);
             show('container1', true);
             show('container2', true)
         });
 
+        function buttonCallback(textConent){
+            // Get data for accession id
+            for (keys in filtered_data){
+                if (filtered_data[keys].id == textConent) {
+
+                }
+              }
+        }
         
         </script>
     </body>
