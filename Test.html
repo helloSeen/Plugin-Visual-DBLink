@@ -11,7 +11,6 @@
         width: 100vw;
         height: 100vh;
         background-color: rgba(192, 192, 192, 0.5);
-        background-image: url("http://i.stack.imgur.com/MnyxU.gif");
         background-repeat: no-repeat;
         background-position: center;
     }
@@ -29,24 +28,35 @@
 
 </div>
 
-<div id="loading"></div>
+<div id="loading">
+    <object data="loading_gif.html" width="500" height="300"></object>
+    <h3 class="text-center" id="state_txt">Waiting for response...</h3>
+</div>
 <script>
     function onReady(callback) {
     var intervalID = window.setInterval(checkReady, 1000);
 
     function checkReady() {
-        fetch('http://3.128.188.117:80/plugin_poll/34a1793970dad7fcd3f6e46e2229ad57')
-            .then((response) => {
+        const entryPoint = fetch('http://3.128.188.117:80/plugin_poll/34a1793970dad7fcd3f6e46e2229ad57');
+        entryPoint.then((response) => {
                 if (!response.ok) {
                     throw new Error("HTTP status " + response.status);
                 }
-                else {
-                    console.log(response.json());
+                return response.json();
+            })
+            .then((result) => {
+                const state  = result.State;
+                console.log(state);
+                document.getElementById("state_txt").textContent = state;
+                if (state == "Done") {
+                    window.clearInterval(intervalID);
+                    callback.call(this);
                 }
             })
-            .then
             .catch((e) => {
                 console.log(e);
+                window.clearInterval(intervalID);
+
             })
     }
 }
