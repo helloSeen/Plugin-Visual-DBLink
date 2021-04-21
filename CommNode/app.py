@@ -3,8 +3,10 @@ import requests as http_req
 import hashlib
 import copy
 import json
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)
 
 db_nodes = [
     
