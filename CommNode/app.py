@@ -114,7 +114,7 @@ class QueryTracker:
         for i,ele in enumerate(self.query_process_list):
             if self.query_process_list[i] == -1:
                 popped_data = self.query_process_queue.pop(0)
-                self.query_process_list[i] = data['qid']
+                self.query_process_list[i] = popped_data['qid']
                 return popped_data
         return False
 
