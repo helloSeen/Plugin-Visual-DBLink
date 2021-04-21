@@ -84,7 +84,7 @@ def get_info_from_accession_ids(results_list, api_key_string=None):
         pubmed_str=""
 
         # Parses document for information    
-        pattern_locus = re.compile(r'(?<=^LOCUS\s{7})([\S]+?)(?=\s+)')
+        pattern_locus = re.compile(r'(?<=^LOCUS\s{7})([\S]+?)(?=\s+)', re.MULTILINE)
         pattern_def = re.compile(r'(?<=^DEFINITION\s{2})([\s\S]+?)(?=\n[A-Z]{2,})', re.MULTILINE)
         pattern_source = re.compile(r'(?<=^SOURCE\s{6})([\s\S]+?)(?=\n\s*[A-Z]{2,})', re.MULTILINE)
         pattern_ref = re.compile(r'(?<=REFERENCE\s{3}1\s{2})(.*)(?=\n)$', re.MULTILINE)
