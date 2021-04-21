@@ -194,11 +194,11 @@ def plugin_poll(qid):
     else:
         status = qtrack.status(qid)
         if status == -2:
-            return "Error: Query not found in queue", 400
+            return {"State":"Error: Query not found in queue"}, 400
         if status == -1:
-            return "Query still in queue", 250
+            return {"State": "Query still in queue"}, 250
         else:
-            return f"{status} out of {node_count} processes finished", 250
+            return {"State": f"{status} out of {node_count} processes finished"}, 250
 
 
 if __name__ == '__main__':
