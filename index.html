@@ -134,7 +134,7 @@
                         <button type="button" id="results" class="btn btn-outline-primary bt-lg dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         GenBank Query Results
                         </button>
-                        <div class="dropdown-menu">
+                        <div id="dropdown" class="dropdown-menu">
                         </div>
                     </div>
                 </div>
@@ -174,8 +174,8 @@
 
             <div class="row">
                 <div class="col-9 offset-3">
-                    <table class="table table-hover table-bordered table-striped">
-                        <tr class="d-flex">
+                    <table id="dataTable" class="table table-hover table-bordered table-striped">
+                        <!-- <tr class="d-flex">
                             <th class="col-3 tableheading">LINK:</th>
                             <td class="col-9"></td>
                         </tr>
@@ -198,7 +198,7 @@
                         <tr class="d-flex">
                             <th class="col-3 tableheading">AUTHORS:</th>
                             <td class="col-9"></td>
-                        </tr>
+                        </tr> -->
                     </table>
                 </div>
             </div>
@@ -206,11 +206,33 @@
         <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-Piv4xVNRyMGpqkS2by6br4gNJ7DXjqk09RmUpJ8jgGtD7zP9yug3goQfGII0yAns" crossorigin="anonymous"></script>
         <script>
+            var json_data = {};
+            var filtered_data = {};
+
+            // Loads the drop down menu and table
+            function load(){
+              var dropper = document.getElementById("dropdown")
+              var tabler = document.getElementById("dataTable")
+              for (set in filtered_data){
+                  // Please don't judge me
+                  var tmp = document.createElement("dropdown-item");
+                  tmp.innerHTML = '<button class="dropdown-item" type="button">%ID%</button>';
+                  tmp.innerHTML = tmp.innerHTML.replace(/%ID%/g, filtered_data[set].id);
+                  dropper.append(tmp)
+              }
+              for (keys in filtered_data[0].data){
+                var rowCount = tabler.rows.length;
+                var row = tabler.insertRow(rowCount);
+                row.className = "d-flex";
+                row.insertCell(0).innerHTML = keys;
+              }
+            }
+
             function onReady(callback) {
             var intervalID = window.setInterval(checkReady, 1000);
         
             function checkReady() {
-                const entryPoint = fetch('http://3.128.188.117:80/plugin_poll/34a1793970dad7fcd3f6e46e2229ad57');
+                const entryPoint = fetch('http://localhost:5000/plugin_poll/34a1793970dad7fcd3f6e46e2229ad57');
                 entryPoint.then((response) => {
                         if (!response.ok) {
                             throw new Error("HTTP status " + response.status);
@@ -223,6 +245,10 @@
                         document.getElementById("state_txt").textContent = state;
                         if (state == "Done") {
                             window.clearInterval(intervalID);
+                            delete result.State;
+                            json_data = result.results;
+                            filtered_data = result.results;
+                            load()
                             callback.call(this);
                         }
                     })
@@ -243,6 +269,8 @@
             show('container1', true);
             show('container2', true)
         });
+
+        
         </script>
     </body>
 </html>
