@@ -35,8 +35,8 @@
     var intervalID = window.setInterval(checkReady, 1000);
 
     function checkReady() {
-        fetch('http://3.128.188.117:80/plugin_poll/1234')
-            .then(response => {
+        fetch('http://3.128.188.117:80/plugin_poll/34a1793970dad7fcd3f6e46e2229ad57')
+            .then((response) => {
                 if (!response.ok) {
                     throw new Error("HTTP status " + response.status);
                 }
@@ -44,7 +44,10 @@
                     console.log(response.json());
                 }
             })
-            //.then(data => console.log(data));
+            .then
+            .catch((e) => {
+                console.log(e);
+            })
     }
 }
 

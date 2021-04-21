@@ -146,7 +146,7 @@ def plugin_request():
         if(status == 1):
             for db_node in db_nodes:
                 print("Sending to "+db_node)
-                url_post = db_node+"api/request/qid"+seq_hash
+                url_post = db_node+"api/request/"+seq_hash
                 header = {'Content-Type':'text/plain'}
                 response = http_req.post(url_post, sequence, headers=header)
             return seq_hash, 200
