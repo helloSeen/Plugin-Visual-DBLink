@@ -31,7 +31,11 @@
 			background-color: #D25627;
 			border-color: #D25627;
 		}
+		.btn{
+			font-size: 14px;
+			font-weight: bold;
 
+		}
 		#loading {
 			display: block;
 			margin: auto;
@@ -218,40 +222,54 @@
 			</div>
 		</div>
 		<div class="row align-items-center gy-2 mt-1">
-			<div class="col">
+			<div class="col-2">
 				<div class="btn-group">
 					<button type="button" id="results" class="btn btn-primary bt-lg dropdown-toggle"
 						data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-						GenBank Query Results
+						Matched GenBank Files
 					</button>
 					<div id="dropdown" class="dropdown-menu">
 					</div>
 				</div>
 			</div>
 			<div class="col">
-				<label>
-					Min Identity Coverage:
-					<input type="number" id="minPCT" step="0.01" max="100" min="0">
-				</label>
-			</div>
-			<div class="col">
-				<label>
-					Min Query Coverage:
-					<input type="number" id="minQ" step="0.01" max="100" min="0">
-				</label>
-			</div>
-		</div>
-		<div class="row align-items-center justify-content-end">
-			<div class="col-4">
-				<div class="form-check">
-					<input class="form-check-input" type="checkbox" value="" id="flexCheckDefault">
-					<label id="myCheck" class="form-check-label" for="flexCheckDefault">
-						Exact Matches Only
-					</label>
+				<div class="row align-items-center">
+					<div class="col-2">
+						<label>
+							Min Identity Coverage:
+						</label>
+					</div>
+					<div class="col-2">
+							<input type="number" id="minPCT" step="0.01" max="100" min="0">
+					</div>
+					<div class="col-2">
+						<div class="form-check">
+							<input class="form-check-input" type="checkbox" value="" id="flexCheckDefault">
+							<label id="myCheck" class="form-check-label" for="flexCheckDefault">
+								Exact Matches Only
+							</label>
+						</div>
+					</div>
+
 				</div>
-			</div>
-			<div class="col-4">
-				<button onclick="FilterDropDown()" type="button" class="btn btn-primary">Filter</button>
+				<div class="row align-items-center">
+					<div class="col-2">
+						<label>
+							Min Query Coverage:
+						</label>
+					</div>
+					<div class="col-2">
+							<input type="number" id="minQ" step="0.01" max="100" min="0">
+					</div>
+					<div class="col-2">
+						<button onclick="FilterDropDown()" type="button" class="btn btn-primary btn	"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-filter" viewBox="0 0 16 16">
+							<path d="M6 10.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 0 1h-3a.5.5 0 0 1-.5-.5zm-2-3a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zm-2-3a.5.5 0 0 1 .5-.5h11a.5.5 0 0 1 0 1h-11a.5.5 0 0 1-.5-.5z"/>
+						  </svg>Filter</button>
+
+					</div>
+				</div>
+
+
 			</div>
 		</div>
 
@@ -368,8 +386,6 @@
 
 		onReady(function () {
 			show('loading', false);
-			// show('container1', true);
-			// show('container2', true);
 			show('file_container', true)
 		});
 
