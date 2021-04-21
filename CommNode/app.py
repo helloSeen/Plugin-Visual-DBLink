@@ -3,10 +3,14 @@ import requests as http_req
 import hashlib
 import copy
 import json
+import re
 from flask_cors import CORS
 
 app = Flask(__name__)
 CORS(app)
+
+
+api_key = "f138e8c165aa0e7a283a3d7a72aca89c3908"
 
 db_nodes = [
     
@@ -28,6 +32,124 @@ ready_results = {}
 # w/ JSON Data (10 obj array):
 #               [{'Accession #': n, 'PCT':0.7, 'Q_PCT':0.85, 'Score':238},
 #                {'Accession #': n, 'PCT':0.7, 'Q_PCT':0.85, 'Score':238},... x10 ]
+
+
+def get_info_from_accession_ids(results_list, api_key_string=None):
+    # Stores results list for modification later
+    payload = copy.deepcopy(results_list)
+    
+    # Gets list of accession IDs
+    accession_id_list = []
+    for doc in payload['results']:
+        accession_id_list.append(doc['id'])
+    
+    # Joins accession ID list into one comma-separated string
+    sep = ","
+    accession_ids=sep.join(accession_id_list)
+    
+    # Creates URL for GET request
+    base_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/"
+    # Nucleotide DB
+    database_name = "nuccore"
+    # Request GenBank File
+    rettype = "gb"
+    retmode = "text"
+
+    fetch_url = f"efetch.fcgi?db={database_name}&id={accession_ids}&rettype={rettype}&retmode={retmode}"
+
+    api_key=""
+    if api_key_string is not None:
+        api_key=f"&api_key={api_key_string}"
+
+    resp = http_req.get(base_url+fetch_url+api_key)
+    
+    combined_gb_files = resp.content.decode()
+    # Splits into list of strings with file data, removes trailing newline from list
+    gb_file_list = combined_gb_files.split("//\n")
+    if '\n' in gb_file_list:
+        gb_file_list.remove('\n')
+                          
+    for i,gb_file in enumerate(gb_file_list):
+        
+        info_dict = {}
+        
+        locus_str=""
+        def_str=""
+        source_str=""
+        ref_str=""
+        auth_str=""
+        cons_str=""
+        title_str=""
+        journ_str=""
+        pubmed_str=""
+
+        # Parses document for information    
+        pattern_locus = re.compile(r'(?<=^LOCUS\s{7})([\S]+?)(?=\s+)')
+        pattern_def = re.compile(r'(?<=^DEFINITION\s{2})([\s\S]+?)(?=\n[A-Z]{2,})', re.MULTILINE)
+        pattern_source = re.compile(r'(?<=^SOURCE\s{6})([\s\S]+?)(?=\n\s*[A-Z]{2,})', re.MULTILINE)
+        pattern_ref = re.compile(r'(?<=REFERENCE\s{3}1\s{2})(.*)(?=\n)$', re.MULTILINE)
+        pattern_auth = re.compile(r'(?<=\s{2}AUTHORS\s{3})([\s\S]+?)(?=\s{3}[A-Z]{2,})', re.MULTILINE)
+        pattern_cons = re.compile(r'(?<=\s{2}CONSRTM\s{3})([\s\S]+?)(?=\s{3}[A-Z]{2,})', re.MULTILINE)
+        pattern_title = re.compile(r'(?<=\s{2}TITLE\s{5})([\s\S]+?)(?=\s{3}[A-Z]{2,})', re.MULTILINE)
+        pattern_journ = re.compile(r'(?<=\s{2}JOURNAL\s{3})([\s\S]+?)(?=\n\s*[A-Z]{2,})', re.MULTILINE)
+        pattern_pubmed = re.compile(r'(?<=PUBMED\s{3})([\w\d]+)(?=\n)$', re.MULTILINE)
+        
+        locus_regex = re.search(pattern_locus, gb_file)
+        def_regex = re.search(pattern_def, gb_file)
+        source_regex = re.search(pattern_source, gb_file)
+        ref_regex = re.search(pattern_ref, gb_file)
+        auth_regex = re.search(pattern_auth, gb_file)
+        cons_regex = re.search(pattern_cons, gb_file)
+        title_regex = re.search(pattern_title, gb_file)
+        journ_regex = re.search(pattern_journ, gb_file)
+        pubmed_regex = re.search(pattern_pubmed, gb_file)
+        
+        # Constructs dictionary with found parameters, removes trailing spaces
+        info_dict['Link']="https://www.ncbi.nlm.nih.gov/nuccore/"+accession_id_list[i]
+
+        if locus_regex:
+            locus_str = locus_regex.group(0).replace("\n           ", "")
+            info_dict['Locus'] = locus_str
+        
+        if def_regex:
+            def_str = def_regex.group(0).replace("\n           ", "")
+            info_dict['Definition'] = def_str
+            
+        if source_regex:
+            source_str = source_regex.group(0).replace("\n           ", "")
+            info_dict['Source'] = source_str
+        
+        if ref_regex:
+            ref_str = ref_regex.group(0).replace("\n           ", "")
+            info_dict['Reference'] = ref_str
+            
+        if auth_regex:
+            auth_str = auth_regex.group(0).replace("\n           ", "")
+            info_dict['Authors'] = auth_str
+            
+        if cons_regex:
+            cons_str = cons_regex.group(0).replace("\n           ", "")
+            info_dict['Consortium'] = cons_str    
+            
+        if title_regex:
+            title_str = title_regex.group(0).replace("\n           ", "")
+            info_dict['Publication Title'] = title_str
+        
+        if journ_regex:
+            journ_str = journ_regex.group(0).replace("\n           ", "")
+            info_dict['Journal'] = journ_str
+            
+        if pubmed_regex:
+            pubmed_str = pubmed_regex.group(0).replace("\n           ", "")
+            info_dict['PubMed ID'] = pubmed_str
+        
+        # Adds "data" field to payload, then stores the document data there
+        if accession_id_list[i] == payload["results"][i]["id"]:
+            payload["results"][i]["data"] = info_dict
+        else:
+            print("Error!")
+        
+    return payload
 
 
 def get_top_ten_results(results_list, qid):
@@ -165,7 +287,8 @@ def node_data(qid):
         if qtrack.all_results_received(qid):
             results_list = qtrack.pop_results(qid)
             # Process results, then store with qid, ready for javascript
-            data_ready = get_top_ten_results(results_list, qid)
+            sorted_results = get_top_ten_results(results_list, qid)
+            data_ready = get_info_from_accession_ids(sorted_results, api_key)
             ready_results[qid] = data_ready
             print("Results ready to be read")
             # Pop process from queue if there are waiting queries
