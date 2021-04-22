@@ -233,18 +233,18 @@
 				</div>
 			</div>
 			<div class="col">
-				<div class="row align-items-center">
+				<div class="row align-items-center g-0">
 					<div class="col-2">
-						<label>
-							Min Identity Coverage:
+						<label style="font-size: medium;">
+							Min % Identity Coverage:
 						</label>
 					</div>
 					<div class="col-2">
-							<input type="number" id="minPCT" step="0.01" max="100" min="0">
+							<input type="number" id="minPCT" step="0.1" max="100" min="0">
 					</div>
 					<div class="col-2">
 						<div class="form-check">
-							<input class="form-check-input" type="checkbox" value="" id="flexCheckDefault">
+							<input class="form-check-input" onclick="check_callback()" type="checkbox" value="" id="flexCheckDefault">
 							<label id="myCheck" class="form-check-label" for="flexCheckDefault">
 								Exact Matches Only
 							</label>
@@ -252,14 +252,14 @@
 					</div>
 
 				</div>
-				<div class="row align-items-center">
+				<div class="row align-items-center g-0">
 					<div class="col-2">
-						<label>
-							Min Query Coverage:
+						<label style="font-size: medium;">
+							Min % Query Coverage:
 						</label>
 					</div>
 					<div class="col-2">
-							<input type="number" id="minQ" step="0.01" max="100" min="0">
+							<input type="number" id="minQ" step="0.1" max="100" min="0">
 					</div>
 					<div class="col-2">
 						<button onclick="FilterDropDown()" type="button" class="btn btn-primary btn	"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-filter" viewBox="0 0 16 16">
@@ -272,50 +272,27 @@
 
 			</div>
 		</div>
-
-		<div class="row gy-2 mt-1">
+		<div id="middle-txt" class="row gy-2 mt-1">
 			<hr />
 			<div class="col-9">
 				<h4 id="definition">Definition</h4>
 				<h5 id="locus" style="font-style: italic;">Locus</h5>
 			</div>
 			<div class="col align-self-end">
-				Score: <span id="score">100</span>&nbsp;&nbsp;&nbsp;&nbsp;
-				Query Coverage: <span id="qcov">95</span>%&nbsp;&nbsp;&nbsp;&nbsp;
-				Identity: <span id="identity">92</span>%
+				Score: <span id="score"></span>&nbsp;&nbsp;&nbsp;&nbsp;
+				Query Coverage: <span id="qcov"></span>%&nbsp;&nbsp;&nbsp;&nbsp;
+				Identity: <span id="identity"></span>%
 			</div>
 		</div>
 
-		<div class="row gy-2 mt-1">
+		<div id="table-holder" class="row gy-2 mt-1">
 			<div class="col">
 				<table id="dataTable" class="table table-striped table-hover">
-
-					<!-- <tr class="d-flex">
-                            <th class="col-3 tableheading">LINK:</th>
-                            <td class="col-9"></td>
-                        </tr>
-                        <tr class="d-flex"> 
-                            <th class="col-3 tableheading">LOCUS:</th>
-                            <td class="col-9"></td>
-                        </tr>
-                        <tr class="d-flex">
-                            <th class="col-3 tableheading">DEF:</th>
-                            <td class="col-9"></td>
-                        </tr>
-                        <tr class="d-flex">
-                            <th class="col-3 tableheading">ORGANISM:</th>
-                            <td class="col-9"></td>
-                        </tr>
-                        <tr class="d-flex">
-                            <th class="col-3 tableheading">JOURNAL REF:</th>
-                            <td class="col-9"></td>
-                        </tr>
-                        <tr class="d-flex">
-                            <th class="col-3 tableheading">AUTHORS:</th>
-                            <td class="col-9"></td>
-                        </tr> -->
 				</table>
 			</div>
+		</div>
+		<div id="no-results" class="center" style="display: none;">
+			No results match criteria
 		</div>
 	</div>
 	<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
@@ -324,73 +301,157 @@
 	<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"
 		integrity="sha384-Piv4xVNRyMGpqkS2by6br4gNJ7DXjqk09RmUpJ8jgGtD7zP9yug3goQfGII0yAns"
 		crossorigin="anonymous"></script>
-	<script>
-		var json_data = {};
-		var filtered_data = {};
+        <script>
+            var json_data = [];
+            var filtered_data = [];
 
-		// Loads the drop down menu and table
-		function load() {
-			var dropper = document.getElementById("dropdown")
-			var tabler = document.getElementById("dataTable")
-			for (set in filtered_data) {
-				// Please don't judge me
-				var tmp = document.createElement("dropdown-item");
-				tmp.innerHTML = '<button class="dropdown-item" type="button">%ID%</button>';
-				tmp.innerHTML = tmp.innerHTML.replace(/%ID%/g, filtered_data[set].id);
-				dropper.append(tmp)
-			}
-			for (keys in filtered_data[0].data) {
-				var rowCount = tabler.rows.length;
-				var row = tabler.insertRow(rowCount);
-				// row.className = "d-flex";
-				row.insertCell(0).innerHTML = keys;
-				// row.insertCell(1).innerHTML = keys;
-			}
-		}
+            // Loads the drop down menu and table
+            function load_drop(){
+              var dropper = document.getElementById("dropdown")
+			  dropper.innerHTML = "";
+              for (set in filtered_data){
+                  // Please don't judge me
+                  var tmp = document.createElement("dropdown-item");
+                  tmp.innerHTML = '<button class="dropdown-item" type="button" onClick="load_table(this.textContent)">%ID%</button>';
+                  tmp.innerHTML = tmp.innerHTML.replace(/%ID%/g, filtered_data[set].id);
+                  dropper.append(tmp)
+              }
+            }
 
-		function onReady(callback) {
-			var intervalID = window.setInterval(checkReady, 1000);
-
-			function checkReady() {
-				const entryPoint = fetch('http://localhost:5000/plugin_poll/34a1793970dad7fcd3f6e46e2229ad57');
-				entryPoint.then((response) => {
-					if (!response.ok) {
-						throw new Error("HTTP status " + response.status);
+			function FilterDropDown(){
+				var min_q = document.getElementById("minQ").value;
+				var min_p = document.getElementById("minPCT").value;
+				filtered_data = []
+				for (set in json_data){
+					var data = json_data[set];
+					if (data.per_cov > min_q && data.per_id > min_p) {
+						filtered_data.push(json_data[set])
 					}
-					return response.json();
-				})
-					.then((result) => {
-						const state = result.State;
-						console.log(state);
-						document.getElementById("state_txt").textContent = state;
-						if (state == "Done") {
-							window.clearInterval(intervalID);
-							delete result.State;
-							json_data = result.results;
-							filtered_data = result.results;
-							load()
-							callback.call(this);
-						}
-					})
-					.catch((e) => {
-						console.log(e);
-						window.clearInterval(intervalID);
-
-					})
+				}
+				if (filtered_data.length == 0){
+					load_table("");
+					document.getElementById("middle-txt").style.visibility = 'hidden';
+					document.getElementById("table-holder").style.visibility = 'hidden';
+					show("no-results", true);
+				}
+				else {
+					load_table(filtered_data[0].id);
+					load_drop();
+					show("no-results", false);
+					document.getElementById("middle-txt").style.visibility = 'visible';
+					document.getElementById("table-holder").style.visibility = 'visible';
+				}
 			}
-		}
+			function check_callback(){
+				var min_q = document.getElementById("minQ");
+				var min_p = document.getElementById("minPCT");
+				if (min_q.value == 100 && min_p.value == 100){
+					min_q.value = 0;
+					min_q.disabled = false;
+					min_p.value = 0;
+					min_p.disabled = false;
+				}
+				else {
+					min_q.value = 100;
+					min_q.disabled = true;
+					min_p.value = 100;
+					min_p.disabled = true;
+				}
+			}
 
-		function show(id, value) {
-			document.getElementById(id).style.display = value ? 'block' : 'none';
-		}
+            function load_table(name){
+			  var score = document.getElementById("score");
+			  var qcov = document.getElementById("qcov");
+			  var identity = document.getElementById("identity");
+              var table = document.getElementById("dataTable");
+			  var locus = document.getElementById("locus");
+			  var def = document.getElementById("definition");
 
-		onReady(function () {
-			show('loading', false);
-			show('file_container', true)
-		});
+              // Quick way to wipe the rows
+              table.innerHTML = "";
+			  score.textContent = "";
+			  qcov.textContent = "";
+			  identity.textContent = "";
+			  locus.textContent = "Locus";
+			  def.textContent = "Definition";
 
+              // Get data for accession id
+              for (keys in filtered_data){
+                if (filtered_data[keys].id == name) {
+					score.textContent = filtered_data[keys].score;
+					qcov.textContent = filtered_data[keys].per_cov;
+					identity.textContent = filtered_data[keys].per_id;
 
-	</script>
+                    var data = filtered_data[keys].data;
+                    console.log(filtered_data[keys].data)
+                    for (datum in data){
+                      console.log(datum)
+                      var rowCount = table.rows.length;
+                      var row = table.insertRow(rowCount);
+                      row.id = keys;
+					  if (datum == "Locus"){
+						  locus.textContent = filtered_data[keys].data[datum]
+					  }
+					  else if (datum == "Definition"){
+						  def.textContent = filtered_data[keys].data[datum]
+					  }
+					  else{
+						row.insertCell(0).innerHTML = datum;
+						if (datum == "Link"){
+							row.insertCell(1).innerHTML = '<a href="%LINK%">%LINK%</a>'.replace(/%LINK%/g, filtered_data[keys].data[datum]);
+						}
+						else{
+							row.insertCell(1).innerHTML = filtered_data[keys].data[datum];
+						}
+						}
+                    }
+                      break
+                    }
+                }
+              }
+            function onReady(callback) {
+            var intervalID = window.setInterval(checkReady, 1000);
+        
+            function checkReady() {
+                const entryPoint = fetch('http://localhost:5000/plugin_poll/34a1793970dad7fcd3f6e46e2229ad57');
+                entryPoint.then((response) => {
+                        if (!response.ok) {
+                            throw new Error("HTTP status " + response.status);
+                        }
+                        return response.json();
+                    })
+                    .then((result) => {
+                        const state  = result.State;
+                        console.log(state);
+                        document.getElementById("state_txt").textContent = state;
+                        if (state == "Done") {
+                            window.clearInterval(intervalID);
+                            delete result.State;
+                            json_data = result.results;
+                            filtered_data = result.results;
+                            load_drop()
+							load_table(filtered_data[0].id);
+                            callback.call(this);
+                        }
+                    })
+                    .catch((e) => {
+                        console.log(e);
+                        window.clearInterval(intervalID);
+        
+                    })
+            }
+        }
+        
+        function show(id, value) {
+            document.getElementById(id).style.display = value ? 'block' : 'none';
+        }
+        onReady(function () {
+            show('loading', false);
+            show('file_container', true);
+            //show('container2', true)
+        });
+        
+        </script>
 </body>
 
 </html>

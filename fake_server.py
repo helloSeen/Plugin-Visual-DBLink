@@ -31,11 +31,11 @@ def plugin_poll(qid):
         if status == -2:
             return {"State":"Error: Query not found in queue"}, 400
         if status == -1:
-            if count == 5:
+            if count == 2:
                 status = 0
             return {"State": "Query still in queue"}, 250
         else:
-            if count == 7:
+            if count == 3:
                 ready_results.append(qid)
                 status = -1
                 count  = 0
