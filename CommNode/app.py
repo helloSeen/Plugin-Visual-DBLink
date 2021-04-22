@@ -43,7 +43,7 @@ def get_info_from_accession_ids(results_list, api_key_string=None):
     # Gets list of accession IDs
     accession_id_list = []
     for doc in payload['results']:
-        accession_id_list.append(doc['id'])
+        accession_id_list.append(doc['accession'])
     
     # Joins accession ID list into one comma-separated string
     sep = ","
@@ -146,7 +146,7 @@ def get_info_from_accession_ids(results_list, api_key_string=None):
             info_dict['PubMed ID'] = pubmed_str
         
         # Adds "data" field to payload, then stores the document data there
-        if accession_id_list[i] == payload["results"][i]["id"]:
+        if accession_id_list[i] == payload["results"][i]["accession"]:
             payload["results"][i]["data"] = info_dict
         else:
             print("Error!")
@@ -163,7 +163,7 @@ def get_top_ten_results(results_list, qid):
     if len(sorted_results_list) > 10:
         sorted_results_list = sorted_results_list[0:10]
 
-    return {"qid":qid,"data":sorted_results_list}
+    return {"qid":qid,"results":sorted_results_list}
 
 
 class QueryTracker:
