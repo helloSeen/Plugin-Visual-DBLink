@@ -1,7 +1,16 @@
 from flask import Flask, request, abort, jsonify
 import os
+import requests as http_req
+import hashlib
+import copy
+import json
+from flask_cors import CORS
 
 app = Flask(__name__)
+
+CORS(app)
+
+commNode_url="http://18.190.154.161/"
 
 @app.route("/status")
 def status():
@@ -14,15 +23,7 @@ def evaluate():
     
     ########## REPLACE THIS SECTION WITH OWN RUN CODE #################
     #uses rdf types
-    accepted_types = {'Activity', 'Agent', 'Association', 'Attachment', 'Collection',
-                      'CombinatorialDerivation', 'Component', 'ComponentDefinition',
-                      'Cut', 'Experiment', 'ExperimentalData',
-                      'FunctionalComponent','GenericLocation',
-                      'Implementation', 'Interaction', 'Location',
-                      'MapsTo', 'Measure', 'Model', 'Module', 'ModuleDefinition'
-                      'Participation', 'Plan', 'Range', 'Sequence',
-                      'SequenceAnnotation', 'SequenceConstraint',
-                      'Usage', 'VariableComponent'}
+    accepted_types = {'Component'}
     
     acceptable = rdf_type in accepted_types
     
@@ -47,20 +48,26 @@ def run():
     shallow_sbol = data['shallow_sbol']
     
     url = complete_sbol.replace('/sbol','')
-      
+    
+    resp=http_req.get(url+r'/fasta', timeout=10)
+
+    fasta_file = resp.content
+    header = {'Content-Type':'text/plain'}
+    response = http_req.post(commNode_url+"plugin_request", fasta_file, headers=header, timeout=10)
+    qid = response.json['qid']
     cwd = os.getcwd()
-    filename = os.path.join(cwd, "Test.html")
+    filename = os.path.join(cwd, "index2.html")
     
     try:
         with open(filename, 'r') as htmlfile:
             result = htmlfile.read()
             
         #put in the url, uri, and instance given by synbiohub
-        result = result.replace("URL_REPLACE", url)
-        result = result.replace("URI_REPLACE", top_level_url)
-        result = result.replace("INSTANCE_REPLACE", instance_url)
+        result = result.replace("COMM_NODE_IP", commNode_url)
+        result = result.replace("QUERY_ID", qid)
+        # result = result.replace("INSTANCE_REPLACE", instance_url)
            
-        result = result.replace("REQUEST_REPLACE", str(data))
+        # result = result.replace("REQUEST_REPLACE", str(data))
             
         return result
     except Exception as e:

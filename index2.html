@@ -413,7 +413,11 @@
             var intervalID = window.setInterval(checkReady, 1000);
         
             function checkReady() {
-                const entryPoint = fetch('http://localhost:5000/plugin_poll/34a1793970dad7fcd3f6e46e2229ad57');
+
+				var commNode_url = 'COMM_NODE_IP'
+				var query_id = 'QUERY_ID'
+
+                const entryPoint = fetch(commNode_url+'plugin_poll/'+query_id);
                 entryPoint.then((response) => {
                         if (!response.ok) {
                             throw new Error("HTTP status " + response.status);

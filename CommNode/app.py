@@ -12,11 +12,13 @@ CORS(app)
 
 api_key = "f138e8c165aa0e7a283a3d7a72aca89c3908"
 
-db_nodes = [
+__node_list = [
     
 "http://18.220.28.88/"
 
 ]
+
+db_nodes = copy.deepcopy(__node_list)
 
 node_count = len(db_nodes)
 
@@ -251,6 +253,15 @@ def index():
 def plugin_request():
     # Process a plugin request
     if request.method == 'POST':
+        for db_node in db_nodes:
+            try:
+                response = http_req.get(db_node+"/status", timeout=10)
+            except (http_req.ReadTimeout, http_req.ConnectionError):
+                db_nodes.remove(db_node)
+                continue
+    if not db_nodes:
+        return {"status":"No database nodes active"},500
+
         # Get the data being sent from the plugin
         sequence = request.data.decode('UTF-8')
         # Store sequence as a md5 hash
