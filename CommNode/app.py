@@ -84,7 +84,7 @@ def get_info_from_accession_ids(results_list, api_key_string=None):
         pubmed_str=""
 
         # Parses document for information    
-        pattern_locus = re.compile(r'(?<=^LOCUS\s{7})([\S]+?)(?=\s+)')
+        pattern_locus = re.compile(r'(?<=^LOCUS\s{7})([\S]+?)(?=\s+)', re.MULTILINE)
         pattern_def = re.compile(r'(?<=^DEFINITION\s{2})([\s\S]+?)(?=\n[A-Z]{2,})', re.MULTILINE)
         pattern_source = re.compile(r'(?<=^SOURCE\s{6})([\s\S]+?)(?=\n\s*[A-Z]{2,})', re.MULTILINE)
         pattern_ref = re.compile(r'(?<=REFERENCE\s{3}1\s{2})(.*)(?=\n)$', re.MULTILINE)
@@ -245,7 +245,7 @@ qtrack = QueryTracker(max_act_prot)
 @app.route('/status')
 def index():
     print("Got status")
-    return 'The server is running', 200
+    return {"status":'The server is running'}, 200
 
 @app.route('/plugin_request', methods=['GET', 'POST'])
 def plugin_request():
@@ -271,7 +271,7 @@ def plugin_request():
                 url_post = db_node+"api/request/"+seq_hash
                 header = {'Content-Type':'text/plain'}
                 response = http_req.post(url_post, sequence, headers=header)
-            return seq_hash, 200
+            return {"qid":seq_hash}, 200
 
 
 @app.route('/node_data/<qid>', methods=['GET','POST'])
@@ -300,10 +300,10 @@ def node_data(qid):
                     header = {'Content-Type':'text/plain'}
                     response = http_req.post(url_post, new_id['sequence'], headers=header)
 
-            return "sent",200
+            return {"status":"sent"},200
         
         else:
-            return "waiting", 250 
+            return {"status":"waiting"}, 250 
 
 
 @app.route('/plugin_poll/<qid>')
