@@ -14,7 +14,7 @@ api_key = "f138e8c165aa0e7a283a3d7a72aca89c3908"
 
 __node_list = [
     
-"http://18.220.28.88/"
+"http://3.143.3.150/"
 
 ]
 
@@ -255,34 +255,34 @@ def plugin_request():
     if request.method == 'POST':
         for db_node in db_nodes:
             try:
-                response = http_req.get(db_node+"/status", timeout=10)
+                response = http_req.get(db_node+"status", timeout=10)
             except (http_req.ReadTimeout, http_req.ConnectionError):
                 db_nodes.remove(db_node)
                 continue
     if not db_nodes:
         return {"status":"No database nodes active"},500
 
-        # Get the data being sent from the plugin
-        sequence = request.data.decode('UTF-8')
-        # Store sequence as a md5 hash
-        seq_hash = hashlib.md5(sequence.encode()).hexdigest()
-        print("Got query from plugin "+seq_hash)
-        # Add sequence hash to query tracker
-        status = qtrack.new(seq_hash, sequence)
-        # Check if duplicate request
-        if(status == -1):
-            return "Error: Duplicate request", 400
-        # Check if request enqueued
-        if(status == 0):
-            return "Job Enqueued: "+seq_hash,250
-        # Check if request stored in active process list
-        if(status == 1):
-            for db_node in db_nodes:
-                print("Sending to "+db_node)
-                url_post = db_node+"api/request/"+seq_hash
-                header = {'Content-Type':'text/plain'}
-                response = http_req.post(url_post, sequence, headers=header)
-            return {"qid":seq_hash}, 200
+    # Get the data being sent from the plugin
+    sequence = request.data.decode('UTF-8')
+    # Store sequence as a md5 hash
+    seq_hash = hashlib.md5(sequence.encode()).hexdigest()
+    print("Got query from plugin "+seq_hash)
+    # Add sequence hash to query tracker
+    status = qtrack.new(seq_hash, sequence)
+    # Check if duplicate request
+    if(status == -1):
+        return "Error: Duplicate request", 400
+    # Check if request enqueued
+    if(status == 0):
+        return "Job Enqueued: "+seq_hash,250
+    # Check if request stored in active process list
+    if(status == 1):
+        for db_node in db_nodes:
+            print("Sending to "+db_node)
+            url_post = db_node+"api/request/"+seq_hash
+            header = {'Content-Type':'text/plain'}
+            response = http_req.post(url_post, sequence, headers=header)
+        return {"qid":seq_hash}, 200
 
 
 @app.route('/node_data/<qid>', methods=['GET','POST'])
