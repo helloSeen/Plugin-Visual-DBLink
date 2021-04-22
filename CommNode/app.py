@@ -14,7 +14,7 @@ api_key = "f138e8c165aa0e7a283a3d7a72aca89c3908"
 
 __node_list = [
     
-"http://3.143.3.150/"
+"http://3.131.100.38/"
 
 ]
 
@@ -319,13 +319,17 @@ def node_data(qid):
 
 @app.route('/plugin_poll/<qid>')
 def plugin_poll(qid):
+    results_received = False
     # Check if processed results ready, if so, return genbank data with query number, otherwise, return just query number
     # and number of nodes waiting to hear back
     if qid in ready_results:
+        results_received = True
         payload = ready_results.pop(qid)
         payload["State"] = "Done"
         # Check if needs to be turned into string
-        return json.dumps(payload), 200
+        return jsonify(payload), 200
+    elif results_received:
+        return jsonify({"State":"Sending Results"}), 200
     else:
         status = qtrack.status(qid)
         if status == -2:
