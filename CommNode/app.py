@@ -89,7 +89,7 @@ def get_info_from_accession_ids(results_list, api_key_string=None):
         pattern_locus = re.compile(r'(?<=^LOCUS\s{7})([\S]+?)(?=\s+)', re.MULTILINE)
         pattern_def = re.compile(r'(?<=^DEFINITION\s{2})([\s\S]+?)(?=\n[A-Z]{2,})', re.MULTILINE)
         pattern_source = re.compile(r'(?<=^SOURCE\s{6})([\s\S]+?)(?=\n\s*[A-Z]{2,})', re.MULTILINE)
-        pattern_ref = re.compile(r'(?<=REFERENCE\s{3}1\s{2})(.*)(?=\n)$', re.MULTILINE)
+        pattern_ref = re.compile(r'(?<=REFERENCE\s{3})([0-9].*)(?=\n)$', re.MULTILINE)
         pattern_auth = re.compile(r'(?<=\s{2}AUTHORS\s{3})([\s\S]+?)(?=\s{3}[A-Z]{2,})', re.MULTILINE)
         pattern_cons = re.compile(r'(?<=\s{2}CONSRTM\s{3})([\s\S]+?)(?=\s{3}[A-Z]{2,})', re.MULTILINE)
         pattern_title = re.compile(r'(?<=\s{2}TITLE\s{5})([\s\S]+?)(?=\s{3}[A-Z]{2,})', re.MULTILINE)
@@ -325,6 +325,7 @@ def plugin_poll(qid):
         payload = ready_results.pop(qid)
         payload["State"] = "Done"
         # Check if needs to be turned into string
+        print(payload)
         return jsonify(payload), 200
     else:
         status = qtrack.status(qid)
