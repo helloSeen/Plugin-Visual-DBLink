@@ -1,4 +1,4 @@
-from flask import Flask, request
+from flask import Flask, request, jsonify
 import requests as http_req
 import hashlib
 import copy
@@ -247,7 +247,7 @@ qtrack = QueryTracker(max_act_prot)
 @app.route('/status')
 def index():
     print("Got status")
-    return {"status":'The server is running'}, 200
+    return jsonify({"status":'The server is running'}), 200
 
 @app.route('/plugin_request', methods=['GET', 'POST'])
 def plugin_request():
@@ -260,7 +260,7 @@ def plugin_request():
                 db_nodes.remove(db_node)
                 continue
     if not db_nodes:
-        return {"status":"No database nodes active"},500
+        return jsonify({"status":"No database nodes active"}),500
 
     # Get the data being sent from the plugin
     sequence = request.data.decode('UTF-8')
@@ -282,7 +282,7 @@ def plugin_request():
             url_post = db_node+"api/request/"+seq_hash
             header = {'Content-Type':'text/plain'}
             response = http_req.post(url_post, sequence, headers=header)
-        return {"qid":seq_hash}, 200
+        return jsonify({"qid":seq_hash}), 200
 
 
 @app.route('/node_data/<qid>', methods=['GET','POST'])
@@ -311,10 +311,10 @@ def node_data(qid):
                     header = {'Content-Type':'text/plain'}
                     response = http_req.post(url_post, new_id['sequence'], headers=header)
 
-            return {"status":"sent"},200
+            return jsonify({"status":"sent"}),200
         
         else:
-            return {"status":"waiting"}, 250 
+            return jsonify({"status":"waiting"}), 250 
 
 
 @app.route('/plugin_poll/<qid>')
@@ -329,11 +329,11 @@ def plugin_poll(qid):
     else:
         status = qtrack.status(qid)
         if status == -2:
-            return {"State":"Error: Query not found in queue"}, 400
+            return jsonify({"State":"Error: Query not found in queue"}), 400
         if status == -1:
-            return {"State": "Query still in queue"}, 250
+            return jsonify({"State": "Query still in queue"}), 250
         else:
-            return {"State": f"{status} out of {node_count} processes finished"}, 250
+            return jsonify({"State": f"{status} out of {node_count} processes finished"}), 250
 
 
 if __name__ == '__main__':
