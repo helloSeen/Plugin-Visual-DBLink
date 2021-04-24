@@ -57,11 +57,12 @@ def run_docker(qid, remote_ip):
                 metrics = {}
                 line = rfile.readline()[:-1]
                 values = line.split("\t")
-                metrics['accession'] = values[0]
-                metrics['score'] = int(values[1])
-                metrics['per_cov'] = float(values[2])
-                metrics['per_id'] = float(values[3])
-                r_dict['results'].append(metrics)
+                if values[0]:
+                    metrics['accession'] = values[0]
+                    metrics['score'] = int(values[1])
+                    metrics['per_cov'] = float(values[2])
+                    metrics['per_id'] = float(values[3])
+                    r_dict['results'].append(metrics)
 
     # Delete files when complete
     os.remove(local_r)
