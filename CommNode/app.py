@@ -11,7 +11,7 @@ CORS(app)
 
 
 api_key = "f138e8c165aa0e7a283a3d7a72aca89c3908"
-
+email = "anirudhw@bu.edu"
 __node_list = [
     
 "http://3.143.3.150/"
@@ -36,16 +36,48 @@ ready_results = {}
 #                {'Accession #': n, 'PCT':0.7, 'Q_PCT':0.85, 'Score':238},... x10 ]
 
 
-def get_info_from_accession_ids(results_list, api_key_string=None):
-    # Stores results list for modification later
-    payload = copy.deepcopy(results_list)
-    
-    # Gets list of accession IDs
-    accession_id_list = []
-    for doc in payload['results']:
-        accession_id_list.append(doc['accession'])
-    
-    # Joins accession ID list into one comma-separated string
+def parse_pubmed_summary(pubmed_id, pubmed_obj):
+    data={}
+    for doc in pubmed_obj:
+        if doc.get('Id') == pubmed_id:
+            consort=""
+            data["Publication Title"]=doc.get('Title')
+            if doc.get('LastAuthor') == doc.get('AuthorList')[-1]:
+                data["Authors"]=", ".join(doc.get('AuthorList'))
+            else:
+                data["Authors"]=", ".join(doc.get('AuthorList')[0:-1])
+                consort=doc.get("AuthorList")[-1]
+            data["Journal"]= doc.get('FullJournalName')                
+            if consort:
+                data["Consortium"]=consort
+            # Convert Year Month Day to Month Day Year
+            ymd=doc.get("PubDate")
+            if ymd is not None:
+                mdy=ymd.split()
+                mdy.append(mdy[0])
+                mdy.pop(0)
+                data["Date Published"]=" ".join(mdy)
+            data["DOI"]=doc.get("DOI")
+            data["Reference Count"] = str(int(doc.get("PmcRefCount")))
+            data["Link"]= f"https://pubmed.ncbi.nlm.nih.gov/{doc.get('Id')}/" 
+            data["PubMed ID"]=doc.get("Id")
+            break
+    filtered_data={key: val for key, val in data.items() if val is not None}
+    return filtered_data
+
+def parse_nuccore_summary(nuccore_id, nuccore_obj):
+    data={}
+    for doc in nuccore_obj:
+        if nuccore_id.split(".")[0] in doc.get("AccessionVersion"):
+            data["Definition"]=doc.get("Title")
+            data["Locus"]= doc.get("Caption")
+            data["Length"]=str(int(doc.get("Length"))) 
+            data["Link"]= f"https://www.ncbi.nlm.nih.gov/nuccore/{nuccore_id}/"
+            break
+    filtered_data={key: val for key, val in data.items() if val is not None}
+    return filtered_data
+
+def get_full_gb_info(accession_id_list, api_key_string=None):
     sep = ","
     accession_ids=sep.join(accession_id_list)
     
@@ -63,14 +95,15 @@ def get_info_from_accession_ids(results_list, api_key_string=None):
     if api_key_string is not None:
         api_key=f"&api_key={api_key_string}"
 
-    resp = http_req.get(base_url+fetch_url+api_key)
+    resp = http_request.get(base_url+fetch_url+api_key)
     
     combined_gb_files = resp.content.decode()
     # Splits into list of strings with file data, removes trailing newline from list
     gb_file_list = combined_gb_files.split("//\n")
     if '\n' in gb_file_list:
         gb_file_list.remove('\n')
-                          
+
+    payload={}              
     for i,gb_file in enumerate(gb_file_list):
         
         info_dict = {}
@@ -93,7 +126,7 @@ def get_info_from_accession_ids(results_list, api_key_string=None):
         pattern_auth = re.compile(r'(?<=\s{2}AUTHORS\s{3})([\s\S]+?)(?=\s{3}[A-Z]{2,})', re.MULTILINE)
         pattern_cons = re.compile(r'(?<=\s{2}CONSRTM\s{3})([\s\S]+?)(?=\s{3}[A-Z]{2,})', re.MULTILINE)
         pattern_title = re.compile(r'(?<=\s{2}TITLE\s{5})([\s\S]+?)(?=\s{3}[A-Z]{2,})', re.MULTILINE)
-        pattern_journ = re.compile(r'(?<=\s{2}JOURNAL\s{3})([\s\S]+?)(?=\n\s*[A-Z]{2,})', re.MULTILINE)
+        pattern_journ = re.compile(r'(?<=\s{2}JOURNAL\s{3})([\s\S]+?)(?=\n\s{0,4}[A-Z]{2,})', re.MULTILINE)
         pattern_pubmed = re.compile(r'(?<=PUBMED\s{3})([\w\d]+)(?=\n)$', re.MULTILINE)
         
         locus_regex = re.search(pattern_locus, gb_file)
@@ -107,52 +140,135 @@ def get_info_from_accession_ids(results_list, api_key_string=None):
         pubmed_regex = re.search(pattern_pubmed, gb_file)
         
         # Constructs dictionary with found parameters, removes trailing spaces
-        info_dict['Link']="https://www.ncbi.nlm.nih.gov/nuccore/"+accession_id_list[i]
+        if def_regex:
+            def_str = def_regex.group(0).replace("\n           ", "")
+            info_dict['Definition'] = def_str
 
         if locus_regex:
             locus_str = locus_regex.group(0).replace("\n           ", "")
             info_dict['Locus'] = locus_str
-        
-        if def_regex:
-            def_str = def_regex.group(0).replace("\n           ", "")
-            info_dict['Definition'] = def_str
-            
-        if source_regex:
-            source_str = source_regex.group(0).replace("\n           ", "")
-            info_dict['Source'] = source_str
-        
-        if ref_regex:
-            ref_str = ref_regex.group(0).replace("\n           ", "")
-            info_dict['Reference'] = ref_str
-            
-        if auth_regex:
-            auth_str = auth_regex.group(0).replace("\n           ", "")
-            info_dict['Authors'] = auth_str
-            
-        if cons_regex:
-            cons_str = cons_regex.group(0).replace("\n           ", "")
-            info_dict['Consortium'] = cons_str    
-            
+
+        info_dict['Link']="https://www.ncbi.nlm.nih.gov/nuccore/"+accession_id_list[i]
+
+        info_dict['pubdata']=[{}]
+
         if title_regex:
             title_str = title_regex.group(0).replace("\n           ", "")
-            info_dict['Publication Title'] = title_str
-        
+            info_dict['pubdata'][0]['Publication Title'] = title_str
+
+        if auth_regex:
+            auth_str = auth_regex.group(0).replace("\n           ", "")
+            info_dict['pubdata'][0]['Authors'] = auth_str
+
         if journ_regex:
             journ_str = journ_regex.group(0).replace("\n           ", "")
-            info_dict['Journal'] = journ_str
-            
+            info_dict['pubdata'][0]['Journal'] = journ_str
+
+        if cons_regex:
+            cons_str = cons_regex.group(0).replace("\n           ", "")
+            info_dict['pubdata'][0]['Consortium'] = cons_str    
+        
         if pubmed_regex:
             pubmed_str = pubmed_regex.group(0).replace("\n           ", "")
-            info_dict['PubMed ID'] = pubmed_str
+            info_dict['pubdata'][0]['Link']=f"https://pubmed.ncbi.nlm.nih.gov/{pubmed_str}/"
+            info_dict['pubdata'][0]['PubMed ID'] = pubmed_str
         
-        # Adds "data" field to payload, then stores the document data there
-        if accession_id_list[i] == payload["results"][i]["accession"]:
-            payload["results"][i]["data"] = info_dict
-        else:
-            print("Error!")
+        payload[accession_id_list[i]]=info_dict
+        
         
     return payload
 
+def get_info_from_accession_ids_elink(results_list, user_email=None,api_key_string=None ):
+    # Stores results list for modification later
+    payload = copy.deepcopy(results_list)
+    # Gets list of accession IDs
+    accession_id_list = []
+    for doc in payload['results']:
+        accession_id_list.append(doc['accession'])
+    # Joins accession ID list into one comma-separated string
+    sep = ","
+    accession_ids=sep.join(accession_id_list)
+    
+    # Enter api key and user email if provided
+    api_key=""
+    if api_key_string:
+        Entrez.api_key=api_key_string
+        api_key=f"&api_key={api_key_string}"
+    if user_email:
+        Entrez.email="anirudhw@bu.edu"
+    accession_id_list=accession_ids.split(",")
+
+    # Gets the associated PubMed articles for each genbank ID
+
+    base_url="https://eutils.ncbi.nlm.nih.gov/entrez/eutils/"
+    dbfrom="nuccore"
+    db="pubmed"
+    link_name="nuccore_pubmed"
+    ids=accession_ids.replace(",", "&id=")
+    elink_url=f"elink.fcgi?dbfrom={dbfrom}&db={db}&id={ids}&linkname={link_name}"
+
+    req=http_request.get(base_url+elink_url+api_key)
+
+    pubmed_ids_per_doc=[]
+
+    with open("testoutput.xml","w") as f:
+        f.write(req.content.decode())
+
+    root = ET.fromstring(req.content.decode())
+    link_sets=root.findall('LinkSet')
+    for link_set in link_sets:
+        pubmed_ids=[]
+        link_set_db=link_set.find('LinkSetDb')
+        if(link_set_db):
+            acc_ids=link_set_db.findall('Link/Id')
+            for acc_id in acc_ids:
+                pubmed_ids.append(acc_id.text)
+        pubmed_ids_per_doc.append(pubmed_ids)
+
+
+    # Stores the related pubmed ids per genbank id
+    nuccore_pubmed=dict(zip(accession_id_list, pubmed_ids_per_doc))
+    # Gets list of all pubmed ids to be searched
+    pubmed_search_list=[pubmed_id for pubmed_ids in pubmed_ids_per_doc for pubmed_id in pubmed_ids]
+    pubmed_search_str = ",".join(pubmed_search_list)
+    # Gets summaries of each pubmed article
+    response=Entrez.esummary(db="pubmed", id=pubmed_search_str)
+    pubmed_data=Entrez.read(response)
+    response.close()
+
+    summ_search_nuccore_ids=[]
+    full_search_nuccore_ids=[]
+    # For each genbank file with associated pubmed ids, store its assoicated data,
+    # otherwise, mark the genbank file for a full search
+    for nuccore_id in accession_id_list:
+        if nuccore_pubmed[nuccore_id]:
+            summ_search_nuccore_ids.append(nuccore_id)
+            for i,pubmed_id in enumerate(nuccore_pubmed[nuccore_id]):
+                nuccore_pubmed[nuccore_id][i]=parse_pubmed_summary(pubmed_id, pubmed_data)
+        else:
+            full_search_nuccore_ids.append(nuccore_id)
+
+    # If there are genbank files with associated pubmed articles,
+    # parse and store their relevant data
+    if summ_search_nuccore_ids:
+        response=Entrez.esummary(db="nuccore", id=accession_ids)
+        summ_genbank_data=Entrez.read(response)
+        response.close()
+    # If there are genbank files with no associated pubmed articles,
+    # perform a full search of their genbank page and store their relevant data
+    if full_search_nuccore_ids:
+        full_genbank_data = get_full_gb_info(full_search_nuccore_ids, api_key_string=api_key_string)
+
+    # Store results in original structure to be sent to the java script page
+    for i,nuccore_id in enumerate(accession_id_list):
+        if nuccore_id in summ_search_nuccore_ids:
+            nuccore_id_data = parse_nuccore_summary(nuccore_id, summ_genbank_data)
+            nuccore_id_data["pubdata"]=nuccore_pubmed[nuccore_id]
+        elif nuccore_id in full_search_nuccore_ids:
+            nuccore_id_data=full_genbank_data[nuccore_id]
+        payload["results"][i]["data"] = nuccore_id_data 
+
+    return payload
 
 def get_top_ten_results(results_list, qid):
     # print(results_list)
@@ -299,7 +415,7 @@ def node_data(qid):
             results_list = qtrack.pop_results(qid)
             # Process results, then store with qid, ready for javascript
             sorted_results = get_top_ten_results(results_list, qid)
-            data_ready = get_info_from_accession_ids(sorted_results, api_key)
+            data_ready = get_info_from_accession_ids_elink(sorted_results,user_email=email, api_key_string=api_key)
             ready_results[qid] = data_ready
             print("Results ready to be read")
             # Pop process from queue if there are waiting queries
@@ -330,7 +446,7 @@ def plugin_poll(qid):
     else:
         status = qtrack.status(qid)
         if status == -2:
-            return jsonify({"State":"Error: Query not found in queue"}), 220
+            return jsonify({"State":"Loading..."}), 220
         if status == -1:
             return jsonify({"State": "Query still in queue"}), 250
         else:
