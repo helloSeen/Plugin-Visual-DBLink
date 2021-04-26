@@ -388,7 +388,21 @@
 				min_p.disabled = true;
 			}
 		}
-
+		function load_pubdata(key, datum, oldCount){
+			var table = document.getElementById("dataTable");
+			var pub = filtered_data[key].data["pubdata"][datum];
+			var rowCount = table.rows.length;
+			while (rowCount != oldCount){
+				table.deleteRow(-1);
+				rowCount = table.rows.length;
+			}
+			for (info in pub){
+				var rowCount = table.rows.length;
+				var row = table.insertRow(rowCount);
+				row.insertCell(0).innerHTML = info;
+				row.insertCell(1).innerHTML = pub[info];
+			}
+		}
 		function load_table(name) {
 			var score = document.getElementById("score");
 			var qcov = document.getElementById("qcov");
@@ -418,16 +432,37 @@
 					for (datum in data) {
 						console.log(datum)
 						var rowCount = table.rows.length;
-						var row = table.insertRow(rowCount);
-						row.accession = keys;
-						// row.id = keys;
 						if (datum == "Locus") {
 							locus.textContent = filtered_data[keys].data[datum]
 						}
 						else if (datum == "Definition") {
 							def.textContent = filtered_data[keys].data[datum]
 						}
+						else if (datum == "pubdata"){
+							var row = table.insertRow(rowCount);
+							row.id = "pubDrop";
+							var script = '<li class="dropdown btn btn-primary"><span class="hidden-xs hidden-sm">Select Publication</span><span class="caret"></span><ul id="dropdown" class="dropdown-menu dropdown-toggle"></ul></li>' 
+							row.insertCell(0).innerHTML = '';
+							row.insertCell(1).innerHTML = script;
+							rowCount = table.rows.length;
+							var pubDrop = document.getElementById("pubDrop")
+							for (publication in filtered_data[keys].data[datum]) {
+								var tmp = document.createElement("li");
+								tmp.innerHTML = '<a onClick="load_pubdata(' + String(keys) + ',' + String(publication) + ',' + String(rowCount) + ')">%ID%</a>';
+								var string  = filtered_data[keys].data[datum][publication]["Publication Title"].slice(0,48);
+								if (string.length == 48){
+									string += "...";
+								}
+								if (filtered_data[keys].data[datum][publication]["Date Published"]){
+									string += "(" + filtered_data[keys].data[datum][publication]["Date Published"].slice(-4,) + ")"
+								}
+								tmp.innerHTML = tmp.innerHTML.replace(/%ID%/g, string);
+								pubDrop.append(tmp)
+							}
+						}
 						else {
+							var row = table.insertRow(rowCount);
+							row.id = datum;
 							row.insertCell(0).innerHTML = datum;
 							if (datum == "Link") {
 								row.insertCell(1).innerHTML = '<a href="%LINK%">%LINK%</a>'.replace(/%LINK%/g, filtered_data[keys].data[datum]);
@@ -442,12 +477,16 @@
 			}
 		}
 		function onReady(callback) {
+			console.log("hello")
 			var intervalID = window.setInterval(checkReady, 2000);
 
 			function checkReady() {
 
-				var commNode_url = 'COMM_NODE_IP'
-				var query_id = 'QUERY_ID'
+				//var commNode_url = 'COMM_NODE_IP'
+				//var query_id = 'QUERY_ID'
+
+				var commNode_url = 'http://192.168.0.137:5000/'
+				var query_id = 'a1234'
 
 				const entryPoint = fetch(commNode_url + 'plugin_poll/' + query_id);
 				entryPoint.then((response) => {
@@ -466,7 +505,6 @@
 						json_data = result.results;
 						filtered_data = result.results;
 						load_drop()
-						// load_table(filtered_data[0].id);
 						load_table(filtered_data[0].accession);
 						callback.call(this);
 					}

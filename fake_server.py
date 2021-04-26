@@ -22,7 +22,7 @@ def plugin_poll(qid):
     count += 1
     if qid in ready_results:
         ready_results = []
-        with open("./tst2.json") as f:
+        with open("./sample_output.json") as f:
             payload = json.load(f)
         payload["State"] = "Done"
         # Check if needs to be turned into string
