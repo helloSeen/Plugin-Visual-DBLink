@@ -288,7 +288,7 @@
 			filtered_data = []
 			for (set in json_data) {
 				var data = json_data[set];
-				if (data.per_cov > min_q && data.per_id > min_p) {
+				if (data.per_cov >= min_q && data.per_id >= min_p) {
 					filtered_data.push(json_data[set])
 				}
 			}
