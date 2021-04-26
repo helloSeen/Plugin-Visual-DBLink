@@ -10,7 +10,7 @@ app = Flask(__name__)
 
 CORS(app)
 
-commNode_url="http://18.190.154.161/"
+commNode_url="http://13.58.13.190/"
 
 @app.route("/status")
 def status():
@@ -49,25 +49,20 @@ def run():
     
     url = complete_sbol.replace('/sbol','')
     
-    # resp=http_req.get(url+r'/fasta', timeout=10)
+    resp=http_req.get(url+r'/fasta', timeout=10)
 
-    # fasta_file = resp.content
-    # header = {'Content-Type':'text/plain'}
-    # response = http_req.post(commNode_url+"plugin_request", fasta_file, headers=header, timeout=10)
-    # qid = response.json['qid']
+    fasta_file = resp.content
+    header = {'Content-Type':'text/plain'}
+    response = http_req.post(commNode_url+"plugin_request", fasta_file, headers=header, timeout=10)
+    qid = response.json()['qid']
     cwd = os.getcwd()
     filename = os.path.join(cwd, "index3.html")
     
     try:
         with open(filename, 'r') as htmlfile:
             result = htmlfile.read()
-            
-        #put in the url, uri, and instance given by synbiohub
-        # result = result.replace("COMM_NODE_IP", commNode_url)
-        # result = result.replace("QUERY_ID", qid)
-        # result = result.replace("INSTANCE_REPLACE", instance_url)
-           
-        # result = result.replace("REQUEST_REPLACE", str(data))
+        result = result.replace("COMM_NODE_IP", commNode_url)
+        result = result.replace("QUERY_ID", qid)
             
         return result
     except Exception as e:
