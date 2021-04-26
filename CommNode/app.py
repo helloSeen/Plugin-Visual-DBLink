@@ -4,6 +4,8 @@ import hashlib
 import copy
 import json
 import re
+from Bio import Entrez
+import xml.etree.ElementTree as ET
 from flask_cors import CORS
 
 app = Flask(__name__)
@@ -14,7 +16,8 @@ api_key = "f138e8c165aa0e7a283a3d7a72aca89c3908"
 email = "anirudhw@bu.edu"
 __node_list = [
     
-"http://3.143.3.150/"
+"http://3.16.164.216/",
+"http://3.22.248.162/"
 
 ]
 
@@ -95,7 +98,7 @@ def get_full_gb_info(accession_id_list, api_key_string=None):
     if api_key_string is not None:
         api_key=f"&api_key={api_key_string}"
 
-    resp = http_request.get(base_url+fetch_url+api_key)
+    resp = http_req.get(base_url+fetch_url+api_key)
     
     combined_gb_files = resp.content.decode()
     # Splits into list of strings with file data, removes trailing newline from list
@@ -207,7 +210,7 @@ def get_info_from_accession_ids_elink(results_list, user_email=None,api_key_stri
     ids=accession_ids.replace(",", "&id=")
     elink_url=f"elink.fcgi?dbfrom={dbfrom}&db={db}&id={ids}&linkname={link_name}"
 
-    req=http_request.get(base_url+elink_url+api_key)
+    req=http_req.get(base_url+elink_url+api_key)
 
     pubmed_ids_per_doc=[]
 
