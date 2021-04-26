@@ -1,12 +1,14 @@
-# Plugin-Visual-DBLink
-A plugin to get related GenBank and UniProt files to SynBioHub Components. 
+# Plugin-Visual-GenBankLink
+![alt text](./gbpluginimg.jpg "Example GenBank Plugin Image")
 
-Please view the [wiki](https://github.com/helloSeen/Plugin-Visual-GenbankLink/wiki) for detailed information on how the plugin works.
+### A plugin to get related GenBank files to SynBioHub Components. 
+
+### Please view the [wiki](https://github.com/helloSeen/Plugin-Visual-GenbankLink/wiki) for detailed information on how the plugin works.
 
 
 ## Components
 This plugin has three main components:
-1. **The Database Servers:** These are the servers (we used many AWS instances) that will store partitions of the GenBank NT Database for querying. Please note that these servers require significant computational power for the plugin to run quickly
+1. **The Database Servers:** These are the servers (we used many AWS instances) that will store partitions of the GenBank NT Database for querying. **Please note that these servers require significant computational power for the plugin to run quickly**
 2. **The Communication Server:** This is the server (we used an AWS instance) that will receive request from the plugin and will return results to the plugin's HTML page
 3. **The Plugin Server:** This is the server that will run on the host machine, whose address will be entered into the plugins page on SynBioHub
 
