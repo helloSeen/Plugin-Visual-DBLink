@@ -15,40 +15,11 @@
 	<!-- <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css" rel="stylesheet"
 		integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6" crossorigin="anonymous"> -->
 	<style>
-		/* body {
-			font-family: 'Roboto', sans-serif;
-			font-weight: bold;
-			font-size: 16px;
-			color: #2C3E50;
-		} */
-
-		/* a {
-			color: #D25627;
-			text-decoration: none;
-		}
-
-		.btn-primary {
-			background-color: #D25627;
-			border-color: #D25627;
-		}
-		.btn{
-			font-size: 14px;
-			font-weight: bold;
-
-		} */
 		#loading {
 			display: block;
 			margin: auto;
 			width: 50%;
 		}
-
-		/* #container1 {
-			display: none
-		}
-
-		#container2 {
-			display: none
-		} */
 
 		#file_container {
 			display: none;
@@ -163,7 +134,7 @@
 			overflow: hidden;
 			margin-left: auto;
 			margin-right: auto;
-			background: #fcfcfc;
+			background: #ffffff;
 		}
 
 		.ldio-5893fgiiwzd {
@@ -209,12 +180,9 @@
 	<div id="file_container" class="container">
 		<div class="row">
 			<div class="col">
-				<!-- <div class="page-header"> -->
-					<h1 class="text-center"> GENBANK RESULTS </h1>
-				<!-- </div> -->
+					<h2 class="text-center"> GENBANK RESULTS </h2>
 			</div>
 		</div>
-		<!-- <br> -->
 		<div class="row">
 			<div class="col">
 				<h4>Filter Matches</h4>
@@ -268,36 +236,6 @@
                     </tr>
                 </tbody>
             </table>
-			<!-- <div class="col"> -->
-
-			<!-- </div> -->
-			<!-- <div class="col"> -->
-				<!-- <div class="row align-items-center g-0"> -->
-					<!-- <div class="col"> -->
-
-					<!-- </div> -->
-					<!-- <div class="col"> -->
-
-					<!-- </div> -->
-					<!-- <div class="col"> -->
-
-					<!-- </div> -->
-
-				<!-- </div> -->
-				<!-- <div class="row align-items-center g-0"> -->
-					<!-- <div class="col"> -->
-
-					<!-- </div> -->
-					<!-- <div class="col"> -->
-					<!-- </div> -->
-					<!-- <div class="col"> -->
-
-
-					<!-- </div> -->
-				<!-- </div> -->
-
-
-			<!-- </div> -->
 		</div>
 		<div id="middle-txt" class="row gy-2 mt-1">
 			<hr />
@@ -326,7 +264,6 @@
 	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
 		integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
 		crossorigin="anonymous"></script>
-	<!-- <script src="js/plugin.js"></script> -->
 
 	<script>
 		var json_data = [];
@@ -340,8 +277,6 @@
 				// Please don't judge me
 				var tmp = document.createElement("li");
 				tmp.innerHTML = '<a onClick="load_table(this.textContent)">%ID%</a>';
-				// tmp.innerHTML = '<button class="dropdown-item" type="button" onClick="load_table(this.textContent)">%ID%</button>';
-				// tmp.innerHTML = tmp.innerHTML.replace(/%ID%/g, filtered_data[set].id);
 				tmp.innerHTML = tmp.innerHTML.replace(/%ID%/g, filtered_data[set].accession);
 				dropper.append(tmp)
 			}
@@ -364,7 +299,6 @@
 				show("no-results", true);
 			}
 			else {
-				// load_table(filtered_data[0].id);
 				load_table(filtered_data[0].accession);
 				load_drop();
 				show("no-results", false);
@@ -399,8 +333,16 @@
 			for (info in pub){
 				var rowCount = table.rows.length;
 				var row = table.insertRow(rowCount);
-				row.insertCell(0).innerHTML = info;
-				row.insertCell(1).innerHTML = pub[info];
+				if (info == "Link"){
+					if (pub["PubMed ID"]) {
+						row.insertCell(0).innerHTML = info;
+						row.insertCell(1).innerHTML = '<a href="' + pub["Link"] + '">' + pub["PubMed ID"] + '</a>';
+					}
+				}
+				else if (info != "PubMed ID"){
+					row.insertCell(0).innerHTML = info;
+					row.insertCell(1).innerHTML = pub[info];
+				}
 			}
 		}
 		function load_table(name) {
@@ -421,7 +363,6 @@
 
 			// Get data for accession id
 			for (keys in filtered_data) {
-				// if (filtered_data[keys].id == name) {
 				if (filtered_data[keys].accession == name) {
 					score.textContent = filtered_data[keys].score;
 					qcov.textContent = filtered_data[keys].per_cov;
@@ -441,16 +382,16 @@
 						else if (datum == "pubdata"){
 							var row = table.insertRow(rowCount);
 							row.id = "pubDrop";
-							var script = '<li class="dropdown btn btn-primary"><span class="hidden-xs hidden-sm">Select Publication</span><span class="caret"></span><ul id="dropdown" class="dropdown-menu dropdown-toggle"></ul></li>' 
-							row.insertCell(0).innerHTML = '';
-							row.insertCell(1).innerHTML = script;
+							var script = '<li class="dropdown btn btn-primary"><span class="hidden-xs hidden-sm">Select Publication</span><span class="caret"></span><ul id="pubdropdown" class="dropdown-menu dropdown-toggle"></ul></li>';
+							row.insertCell(0).innerHTML = script;
+							row.insertCell(1).innerHTML = '';
 							rowCount = table.rows.length;
-							var pubDrop = document.getElementById("pubDrop")
+							var pubDrop = document.getElementById("pubdropdown")
 							for (publication in filtered_data[keys].data[datum]) {
 								var tmp = document.createElement("li");
 								tmp.innerHTML = '<a onClick="load_pubdata(' + String(keys) + ',' + String(publication) + ',' + String(rowCount) + ')">%ID%</a>';
-								var string  = filtered_data[keys].data[datum][publication]["Publication Title"].slice(0,48);
-								if (string.length == 48){
+								var string  = filtered_data[keys].data[datum][publication]["Publication Title"].slice(0,64);
+								if (string.length == 64){
 									string += "...";
 								}
 								if (filtered_data[keys].data[datum][publication]["Date Published"]){
@@ -459,6 +400,7 @@
 								tmp.innerHTML = tmp.innerHTML.replace(/%ID%/g, string);
 								pubDrop.append(tmp)
 							}
+							load_pubdata(keys, 0, rowCount);
 						}
 						else {
 							var row = table.insertRow(rowCount);
@@ -482,12 +424,8 @@
 
 			function checkReady() {
 
-				//var commNode_url = 'COMM_NODE_IP'
-				//var query_id = 'QUERY_ID'
-
-				var commNode_url = 'http://192.168.0.137:5000/'
-				var query_id = 'a1234'
-
+				var commNode_url = 'COMM_NODE_IP'
+				var query_id = 'QUERY_ID'
 				const entryPoint = fetch(commNode_url + 'plugin_poll/' + query_id);
 				entryPoint.then((response) => {
 					if (!response.ok) {
@@ -514,163 +452,6 @@
 					window.clearInterval(intervalID);
 
 				})
-				// window.clearInterval(intervalID);
-				// filtered_data = [
-				// 		{
-				// 			"accession": "D26185",
-				// 			"score": 237,
-				// 			"per_cov": 76.0,
-				// 			"per_id": 100.0,
-				// 			"data": {
-				// 				"Link": "https://www.ncbi.nlm.nih.gov/nuccore/D26185",
-				// 				"Locus": "BAC180K",
-				// 				"Definition": "Bacillus subtilis gene, 180 kilobase region of replication origin.",
-				// 				"Source": "Bacillus subtilis subsp. subtilis str. 168",
-				// 				"Reference": " AUTHORS   Moriya,S., Ogasawara,N. and Yoshikawa,H.",
-				// 				"Authors": "Moriya,S., Ogasawara,N. and Yoshikawa,H.",
-				// 				"Publication Title": "Structure and function of the region of the replication origin of the Bacillus subtilis chromosome. III. Nucleotide sequence of some 10,000 base pairs in the origin region",
-				// 				"Journal": "Nucleic Acids Res. 13 (7), 2251-2265 (1985)",
-				// 				"PubMed ID": "2987847"
-				// 			}
-				// 		},
-				// 		{
-				// 			"accession": "J01552",
-				// 			"score": 100,
-				// 			"per_cov": 32.0,
-				// 			"per_id": 100.0,
-				// 			"data": {
-				// 				"Link": "https://www.ncbi.nlm.nih.gov/nuccore/J01552",
-				// 				"Locus": "BACVEGPRO",
-				// 				"Definition": "Bacillus subtilis veg gene promoter region.",
-				// 				"Source": "Bacillus subtilis",
-				// 				"Reference": "(bases 1 to 127)",
-				// 				"Authors": "Le Grice,S.F. and Sonenshein,A.L.",
-				// 				"Publication Title": "Interaction of Bacillus subtilis RNA polymerase with a chromosomal promoter",
-				// 				"Journal": "J. Mol. Biol. 162 (3), 551-564 (1982)",
-				// 				"PubMed ID": "6820069"
-				// 			}
-				// 		},
-				// 		{
-				// 			"accession": "V00635",
-				// 			"score": 47,
-				// 			"per_cov": 15.0,
-				// 			"per_id": 100.0,
-				// 			"data": {
-				// 				"Link": "https://www.ncbi.nlm.nih.gov/nuccore/V00635",
-				// 				"Locus": "V00635",
-				// 				"Definition": "Genes cro cII and oop of the lambdoid phage 434.",
-				// 				"Source": "Phage 434",
-				// 				"Reference": "(bases 1 to 873)",
-				// 				"Authors": "Grosschedl,R. and Schwarz,E.",
-				// 				"Publication Title": "Nucleotide sequence of the cro-cII-oop region of bacteriophage 434\n         ",
-				// 				"Journal": "Nucleic Acids Res. 6 (3), 867-881 (1979)",
-				// 				"PubMed ID": "375198"
-				// 			}
-				// 		},
-				// 		{
-				// 			"accession": "U02447",
-				// 			"score": 47,
-				// 			"per_cov": 15.0,
-				// 			"per_id": 100.0,
-				// 			"data": {
-				// 				"Link": "https://www.ncbi.nlm.nih.gov/nuccore/U02447",
-				// 				"Locus": "CVU02447",
-				// 				"Definition": "Cloning vector lambda gt10, region flanking the cloning site.",
-				// 				"Source": "Cloning vector lambda gt10",
-				// 				"Reference": "(bases 1 to 1881)",
-				// 				"Authors": "Huynh,T.V., Young,R.A. and Davis,R.W.",
-				// 				"Publication Title": "Construction and screening cDNA libraries in lambda gt10 and lambda gt11",
-				// 				"Journal": "(in) Glover,D.M. (Ed.);"
-				// 			}
-				// 		},
-				// 		{
-				// 			"accession": "M28306",
-				// 			"score": 47,
-				// 			"per_cov": 15.0,
-				// 			"per_id": 100.0,
-				// 			"data": {
-				// 				"Link": "https://www.ncbi.nlm.nih.gov/nuccore/M28306",
-				// 				"Locus": "SYNCRO434P",
-				// 				"Definition": "Cloning vector pBRcro434.",
-				// 				"Source": "Cloning vector pBRcro434",
-				// 				"Reference": "(bases 1 to 180)",
-				// 				"Authors": "Bespalova,I.N., Rubtsov,P.M., Kirpichnikov,M.P. and Skryabin,K.G.",
-				// 				"Publication Title": "C1 and cro repressors of lambdoid phages. I. Construction of vectors for expression of lambda imm-434 bacteriophage cro repressor",
-				// 				"Journal": "Mol. Biol. (Mosk) 18, 20-27 (1984)"
-				// 			}
-				// 		},
-				// 		{
-				// 			"accession": "X73093",
-				// 			"score": 47,
-				// 			"per_cov": 15.0,
-				// 			"per_id": 100.0,
-				// 			"data": {
-				// 				"Link": "https://www.ncbi.nlm.nih.gov/nuccore/X73093",
-				// 				"Locus": "X73093",
-				// 				"Definition": "Bacteriophage 434 right operator.",
-				// 				"Source": "Phage 434",
-				// 				"Reference": "(bases 1 to 116)",
-				// 				"Authors": "Bushman,F.D.",
-				// 				"Publication Title": "The bacteriophage 434 right operator. Roles of O(R)1, O(R)2 and O(R)3",
-				// 				"Journal": "J. Mol. Biol. 230 (1), 28-40 (1993)",
-				// 				"PubMed ID": "8450541"
-				// 			}
-				// 		},
-				// 		{
-				// 			"accession": "M12803",
-				// 			"score": 47,
-				// 			"per_cov": 15.0,
-				// 			"per_id": 100.0,
-				// 			"data": {
-				// 				"Link": "https://www.ncbi.nlm.nih.gov/nuccore/M12803",
-				// 				"Locus": "P434OPRA",
-				// 				"Definition": "Bacteriophage 434 operator region DNA with recognition sites for repressor and cro proteins.",
-				// 				"Source": "Phage 434",
-				// 				"Reference": "(bases 1 to 67)",
-				// 				"Authors": "Wharton,R.P., Brown,E.L. and Ptashne,M.",
-				// 				"Publication Title": "Substituting an alpha-helix switches the sequence-specific DNA interactions of a repressor",
-				// 				"Journal": "Cell 38 (2), 361-369 (1984)",
-				// 				"PubMed ID": "6540625"
-				// 			}
-				// 		},
-				// 		{
-				// 			"accession": "J02460",
-				// 			"score": 47,
-				// 			"per_cov": 15.0,
-				// 			"per_id": 100.0,
-				// 			"data": {
-				// 				"Link": "https://www.ncbi.nlm.nih.gov/nuccore/J02460",
-				// 				"Locus": "LAMIMM434",
-				// 				"Definition": "bacteriophage lambda imm434 ecori-g fragment.",
-				// 				"Source": "Escherichia virus Lambda",
-				// 				"Reference": "(bases 1 to 1287)",
-				// 				"Authors": "Ovchinnikov,Y.A., Guryev,S.O., Krayev,A.S., Monastyrskaya,G.S., Skryabin,K.G., Sverdlov,E.D., Zakharyev,V.M. and Bayev,A.A.",
-				// 				"Publication Title": "Primary structure of an EcoRI fragment of lambda imm434 DNA containing regions cI-cro of phage 434 and cII-o of phage lambda",
-				// 				"Journal": "Gene 6 (3), 235-249 (1979)",
-				// 				"PubMed ID": "478301"
-				// 			}
-				// 		},
-				// 		{
-				// 			"accession": "M12904",
-				// 			"score": 47,
-				// 			"per_cov": 15.0,
-				// 			"per_id": 100.0,
-				// 			"data": {
-				// 				"Link": "https://www.ncbi.nlm.nih.gov/nuccore/M12904",
-				// 				"Locus": "SYN322CI",
-				// 				"Definition": "Bacteriophage 434 cI gene inserted in plasmid pNS1.",
-				// 				"Source": "unidentified cloning vector",
-				// 				"Reference": "(bases 1 to 970)",
-				// 				"Authors": "Nikolnikov,S., Posfai,G. and Sain,B.",
-				// 				"Publication Title": "The construction of a versatile plasmid vector that allows direct selection of fragments cloned into six unique sites of the cI gene of coliphage 434",
-				// 				"Journal": "Gene 30 (1-3), 261-265 (1984)",
-				// 				"PubMed ID": "6096221"
-				// 			}
-				// 		}
-				// 	]
-				// load_drop()
-				// load_table(filtered_data[0].accession);
-				// callback.call(this);
 			}
 		}
 
@@ -680,7 +461,6 @@
 		onReady(function () {
 			show('loading', false);
 			show('file_container', true);
-			//show('container2', true)
 		});
 
 	</script>
