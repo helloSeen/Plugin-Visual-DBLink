@@ -8,10 +8,10 @@ from pathlib import Path
 import requests as http_req
 
 app = Flask(__name__)
+# Configure databse id and genbank fragment
 db = 'nt.00'
 nid = '1'
 HOME = '/home/ec2-user/'
-#HOME = "C:\\Users\\Sean Nemtzow\\Documents\\blast\\"
 # in seconds
 tout = 600
 
@@ -23,8 +23,11 @@ def run_docker(qid, remote_ip):
     fasta = "/blast/queries/{}.fsa".format(qid)
     results = "/blast/results/{}.out".format(qid)
     docker_client = docker.from_env()
+    # Command to run, it limits results to:
+    # Accession ID, Score, Query Coverage, and Identity Percentage
     cmnd = "blastn -query {} -db {} -out {} -outfmt \"6 sacc score qcovhsp pident\"".format(
         fasta, db, results)
+    # Mounts local directories inside docker container
     volume_dict = {os.path.join(HOME, 'blastdb'): {'bind': '/blast/blastdb', 'mode': 'ro'},
                    os.path.join(HOME, 'blastdb_custom'): {'bind': '/blast/blastdb_custom', 'mode': 'ro'},
                    os.path.join(HOME, 'queries'): {'bind': '/blast/queries', 'mode': 'ro'},
@@ -35,6 +38,7 @@ def run_docker(qid, remote_ip):
         image='ncbi/blast', command=cmnd, volumes=volume_dict, detach=True)
     
     timeout_reached = True
+    # Check status of docker execution every 1 second
     for i in range(tout):
         container.reload()
         print(container.status)
@@ -44,6 +48,7 @@ def run_docker(qid, remote_ip):
         time.sleep(1)
     container.remove(force=True)
 
+    # Build json response to server
     local_r = os.path.join(HOME, "results", "{}.out".format(qid))
     local_f = os.path.join(HOME, "queries", "{}.fsa".format(qid))
     r_dict = {}
@@ -80,6 +85,10 @@ def healthy():
 
 @app.route('/api/request/<qid>', methods=['POST', 'GET'])
 def process_request(qid):
+    ''' 
+    Receives query requests from server, spins up thread and runs
+    docker command in thread
+    '''
     print("Got request for: {}".format(qid))
     content = request.data.decode('UTF-8')
     fasta = os.path.join(HOME, "queries", "{}.fsa".format(qid))
