@@ -14,14 +14,22 @@ app = Flask(__name__)
 CORS(app)
 
 
-api_key = "f138e8c165aa0e7a283a3d7a72aca89c3908"
-email = "anirudhw@bu.edu"
-__node_list = [
-    
-"http://3.16.164.216/",
-"http://3.22.248.162/"
+with open("Entrez_User_Info.json","r") as f:
+    user_info = json.loads(f.read())
 
-]
+
+api_key = user_info["api_key"]
+email = user_info["email"]
+
+with open("DBIPs.txt", "r") as f:
+    db_ip_list=f.read().split("\n")
+
+__node_list = []
+
+for db_ip in db_ip_list:
+    if db_ip != "\n":
+        __node_list.append(f"http://{db_ip}/")
+
 
 db_nodes = copy.deepcopy(__node_list)
 
