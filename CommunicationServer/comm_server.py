@@ -224,9 +224,6 @@ def get_info_from_accession_ids_elink(results_list, user_email=None,api_key_stri
 
     pubmed_ids_per_doc=[]
 
-    with open("testoutput.xml","w") as f:
-        f.write(req.content.decode())
-
     root = ET.fromstring(req.content.decode())
     link_sets=root.findall('LinkSet')
     for link_set in link_sets:
