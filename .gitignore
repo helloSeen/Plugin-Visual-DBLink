@@ -2,3 +2,8 @@ __pycache__
 venv
 .vscode/*
 CommunicationServer/__pycache__/*
+# These are ignored to prevent users from pushing their IPs
+CommunicationServer/DBIPs.txt
+PluginServer/CommIP.txt
+# This is ignored to prevent users from pushing their Entrez Info
+CommunicationServer/Entrez_User_Info.json
