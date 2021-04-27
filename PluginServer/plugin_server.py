@@ -4,13 +4,18 @@ import requests as http_req
 import hashlib
 import copy
 import json
-# from flask_cors import CORS
+import traceback
+from flask_cors import CORS
 
 app = Flask(__name__)
 
-# CORS(app)
+CORS(app)
 
-commNode_url="http://13.58.13.190/"
+with open("CommIP.txt", "r") as f:
+    comm_ip = f.read()
+comm_ip=comm_ip.strip()
+
+commNode_url = f"http://{comm_ip}/"
 
 @app.route("/status")
 def status():
@@ -48,27 +53,37 @@ def run():
     shallow_sbol = data['shallow_sbol']
     
     url = complete_sbol.replace('/sbol','')
-    
-    resp=http_req.get(url+r'/fasta', timeout=10)
-
-    fasta_file = resp.content
-    header = {'Content-Type':'text/plain'}
-    response = http_req.post(commNode_url+"plugin_request", fasta_file, headers=header, timeout=10)
-    qid = response.json()['qid']
-    cwd = os.getcwd()
-    filename = os.path.join(cwd, "index3.html")
-    
     try:
-        with open(filename, 'r') as htmlfile:
-            result = htmlfile.read()
-        result = result.replace("COMM_NODE_IP", commNode_url)
-        result = result.replace("QUERY_ID", qid)
-            
+        cwd = os.getcwd()
+    
+        resp=http_req.get(url+r'/fasta', timeout=10)
+
+        fasta_file = resp.content
+        header = {'Content-Type':'text/plain'}
+        response = http_req.post(commNode_url+"plugin_request", fasta_file, headers=header, timeout=10)
+        
+        resp_content = response.json()
+
+        if resp_content["status"] == "success":
+            qid = response.json()['qid']
+            filename = os.path.join(cwd, "html/index.html")
+        
+            with open(filename, 'r') as htmlfile:
+                result = htmlfile.read()
+            result = result.replace("COMM_NODE_IP", commNode_url)
+            result = result.replace("QUERY_ID", qid)
+        else:
+            with open(os.path.join(cwd, "html/error.html"), 'r') as htmlfile:
+                result = htmlfile.read()
+                print(resp_content["status"])
         return result
     except Exception as e:
-        print(e)
-        abort(400)
+        with open(os.path.join(cwd, "html/error.html"), 'r') as htmlfile:
+            result = htmlfile.read()
+        print(traceback.format_exc())
+        return result, 299
 
 
-# if __name__ == "__main__":
-#     app.run(host='0.0.0.0', port=5050)
+
+if __name__ == "__main__":
+    app.run(host='0.0.0.0', port=5050)
