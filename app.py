@@ -59,15 +59,22 @@ def run():
         fasta_file = resp.content
         header = {'Content-Type':'text/plain'}
         response = http_req.post(commNode_url+"plugin_request", fasta_file, headers=header, timeout=10)
-        qid = response.json()['qid']
-        cwd = os.getcwd()
-        filename = os.path.join(cwd, "index3.html")
-    
-        with open(filename, 'r') as htmlfile:
+        
+        resp_content = response.json()
+
+        if resp_content["status"] == "success":
+            qid = response.json()['qid']
+            cwd = os.getcwd()
+            filename = os.path.join(cwd, "index3.html")
+        
+            with open(filename, 'r') as htmlfile:
+                result = htmlfile.read()
+            result = result.replace("COMM_NODE_IP", commNode_url)
+            result = result.replace("QUERY_ID", qid)
+        else:
+        with open("error.html", 'r') as htmlfile:
             result = htmlfile.read()
-        result = result.replace("COMM_NODE_IP", commNode_url)
-        result = result.replace("QUERY_ID", qid)
-            
+            print(resp_content["status"])
         return result
     except Exception as e:
         with open("error.html", 'r') as htmlfile:

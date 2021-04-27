@@ -410,15 +410,15 @@ def plugin_request():
     print("Got query from plugin "+seq_hash)
     # Check if query in cache
     if seq_hash in listdir('./cache'):
-        return jsonify({"qid":seq_hash}), 200
+        return jsonify({"status":"success","qid":seq_hash}), 200
     # Add sequence hash to query tracker
     status = qtrack.new(seq_hash, sequence)
     # Check if duplicate request
     if(status == -1):
-        return "Error: Duplicate request", 400
+        return jsonify({"status": "Error: Duplicate Request"}), 260
     # Check if request enqueued
     if(status == 0):
-        return "Job Enqueued: "+seq_hash,250
+        return jsonify({"status": "success", "qid": seq_hash}),250
     # Check if request stored in active process list
     if(status == 1):
         for db_node in db_nodes:
@@ -426,7 +426,7 @@ def plugin_request():
             url_post = db_node+"api/request/"+seq_hash
             header = {'Content-Type':'text/plain'}
             response = http_req.post(url_post, sequence, headers=header)
-        return jsonify({"qid":seq_hash}), 200
+        return jsonify({"status":"success","qid":seq_hash}), 200
 
 
 @app.route('/node_data/<qid>', methods=['GET','POST'])
