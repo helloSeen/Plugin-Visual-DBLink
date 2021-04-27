@@ -218,7 +218,7 @@
                     </tr>
                     <tr>
                         <td colspan="2">
-                            <button onclick="FilterDropDown()" type="button" class="btn btn-primary btn	"><svg
+                            <button onclick="filterDropDown()" type="button" class="btn btn-primary btn	"><svg
                                 xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
                                 class="bi bi-filter" viewBox="0 0 16 16">
                                 <path
@@ -269,12 +269,11 @@
 		var json_data = [];
 		var filtered_data = [];
 
-		// Loads the drop down menu and table
+		// Loads the drop down menu with IDs that have callback functions
 		function load_drop() {
 			var dropper = document.getElementById("dropdown")
 			dropper.innerHTML = "";
 			for (set in filtered_data) {
-				// Please don't judge me
 				var tmp = document.createElement("li");
 				tmp.innerHTML = '<a onClick="load_table(this.textContent)">%ID%</a>';
 				tmp.innerHTML = tmp.innerHTML.replace(/%ID%/g, filtered_data[set].accession);
@@ -282,7 +281,8 @@
 			}
 		}
 
-		function FilterDropDown() {
+		//Filters list of valid results given user requirements
+		function filterDropDown() {
 			var min_q = document.getElementById("minQ").value;
 			var min_p = document.getElementById("minPCT").value;
 			filtered_data = []
@@ -292,6 +292,7 @@
 					filtered_data.push(json_data[set])
 				}
 			}
+			// If no results match the criteria, give a message
 			if (filtered_data.length == 0) {
 				load_table("");
 				load_drop();
@@ -307,6 +308,9 @@
 				document.getElementById("table-holder").style.visibility = 'visible';
 			}
 		}
+
+		//Callback function for "Exact Matches Only" checkmark
+		//Sets both query coverage and identity match to 100
 		function check_callback() {
 			var min_q = document.getElementById("minQ");
 			var min_p = document.getElementById("minPCT");
@@ -323,10 +327,13 @@
 				min_p.disabled = true;
 			}
 		}
+
+		//Loads the publication data after the article drop down menu
 		function load_pubdata(key, datum, oldCount){
 			var table = document.getElementById("dataTable");
 			var pub = filtered_data[key].data["pubdata"][datum];
 			var rowCount = table.rows.length;
+			// Clears the data from the last article
 			while (rowCount != oldCount){
 				table.deleteRow(-1);
 				rowCount = table.rows.length;
@@ -346,6 +353,8 @@
 				}
 			}
 		}
+
+		//Loads the info related to Accession ID
 		function load_table(name) {
 			var score = document.getElementById("score");
 			var qcov = document.getElementById("qcov");
@@ -365,53 +374,57 @@
 			// Get data for accession id
 			for (keys in filtered_data) {
 				if (filtered_data[keys].accession == name) {
-					score.textContent = filtered_data[keys].score;
-					qcov.textContent = filtered_data[keys].per_cov;
-					identity.textContent = filtered_data[keys].per_id;
+					var match = filtered_data[keys]
+					score.textContent = match.score;
+					qcov.textContent = match.per_cov;
+					identity.textContent = match.per_id;
 
-					var data = filtered_data[keys].data;
-					console.log(filtered_data[keys].data)
+					var data = match.data;
 					for (datum in data) {
-						console.log(datum)
 						var rowCount = table.rows.length;
 						if (datum == "Locus") {
-							locus.textContent = filtered_data[keys].data[datum]
+							locus.textContent = match.data[datum]
 						}
 						else if (datum == "Definition") {
-							def.textContent = filtered_data[keys].data[datum]
+							def.textContent = match.data[datum]
 						}
 						else if (datum == "pubdata"){
 							var row = table.insertRow(rowCount);
 							row.id = "pubDrop";
+
+							// Inserts dropdown in row to house publication articles, this reduces length and repition of table
 							var script = '<li class="dropdown btn btn-primary"><span class="hidden-xs hidden-sm">Select Publication</span><span class="caret"></span><ul id="pubdropdown" class="dropdown-menu dropdown-toggle"></ul></li>';
 							row.insertCell(0).innerHTML = script;
 							row.insertCell(1).innerHTML = '';
+
+							// Populates publication dropdown with article names + year published
 							rowCount = table.rows.length;
 							var pubDrop = document.getElementById("pubdropdown")
-							for (publication in filtered_data[keys].data[datum]) {
+							for (publication in match.data[datum]) {
 								var tmp = document.createElement("li");
 								tmp.innerHTML = '<a onClick="load_pubdata(' + String(keys) + ',' + String(publication) + ',' + String(rowCount) + ')">%ID%</a>';
-								var string  = filtered_data[keys].data[datum][publication]["Publication Title"].slice(0,64);
+								var string  = match.data[datum][publication]["Publication Title"].slice(0,64);
 								if (string.length == 64){
 									string += "...";
 								}
-								if (filtered_data[keys].data[datum][publication]["Date Published"]){
-									string += "(" + filtered_data[keys].data[datum][publication]["Date Published"].slice(-4,) + ")"
+								if (match.data[datum][publication]["Date Published"]){
+									string += "(" + match.data[datum][publication]["Date Published"].slice(-4,) + ")"
 								}
 								tmp.innerHTML = tmp.innerHTML.replace(/%ID%/g, string);
 								pubDrop.append(tmp)
 							}
 							load_pubdata(keys, 0, rowCount);
 						}
+						// Hyperlinks to genbank webpage
 						else {
 							var row = table.insertRow(rowCount);
 							row.id = datum;
 							row.insertCell(0).innerHTML = datum;
 							if (datum == "Link") {
-								row.insertCell(1).innerHTML = '<a href="%LINK%">%LINK%</a>'.replace(/%LINK%/g, filtered_data[keys].data[datum]);
+								row.insertCell(1).innerHTML = '<a href="%LINK%">%LINK%</a>'.replace(/%LINK%/g, match.data[datum]);
 							}
 							else {
-								row.insertCell(1).innerHTML = filtered_data[keys].data[datum];
+								row.insertCell(1).innerHTML = match.data[datum];
 							}
 						}
 					}
@@ -419,14 +432,15 @@
 				}
 			}
 		}
+		// Periodically pings entrypoint server to check on results
 		function onReady(callback) {
-			console.log("hello")
 			var intervalID = window.setInterval(checkReady, 2000);
 
 			function checkReady() {
-
+				// These values get replaced by plugin server
 				var commNode_url = 'COMM_NODE_IP'
 				var query_id = 'QUERY_ID'
+
 				const entryPoint = fetch(commNode_url + 'plugin_poll/' + query_id);
 				entryPoint.then((response) => {
 					if (!response.ok) {
@@ -456,21 +470,17 @@
 			}
 		}
 
+		// Quick function to toggle elements on and off
 		function show(id, value) {
 			document.getElementById(id).style.display = value ? 'block' : 'none';
 		}
+		// Callback function to remove loading screen and display results when ready
 		onReady(function () {
 			show('loading', false);
 			show('file_container', true);
 		});
-
 	</script>
-
-
-
-
-
-
+	
 </body>
 
 </html>
