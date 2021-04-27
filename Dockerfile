@@ -10,10 +10,10 @@ RUN apk add --no-cache --update \
 
 COPY . .
 
-EXPOSE 5000
+EXPOSE 5050
 
 RUN pip3 install -r requirements.txt
 
 ENV FLASK_APP=app.py
 
-CMD ["waitress-serve", "--port=5000", "app:app" ]
+CMD ["waitress-serve", "--port=5050", "app:app" ]

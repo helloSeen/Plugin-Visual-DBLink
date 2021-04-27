@@ -4,11 +4,11 @@ import requests as http_req
 import hashlib
 import copy
 import json
-from flask_cors import CORS
+# from flask_cors import CORS
 
 app = Flask(__name__)
 
-CORS(app)
+# CORS(app)
 
 commNode_url="http://13.58.13.190/"
 
@@ -70,5 +70,5 @@ def run():
         abort(400)
 
 
-if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=5050)
+# if __name__ == "__main__":
+#     app.run(host='0.0.0.0', port=5050)
