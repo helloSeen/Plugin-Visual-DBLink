@@ -4,6 +4,7 @@ import hashlib
 import copy
 import json
 import re
+import traceback
 from Bio import Entrez
 import xml.etree.ElementTree as ET
 from os import listdir, remove, path, mkdir
@@ -339,14 +340,22 @@ class QueryTracker:
             return True
         return False
 
-    def pop_results(self, qid):
-        # Returns the results for a given qid and frees its space
+    def get_results(self, qid):
+        # Returns the results for a given qid
         ind = self.query_process_list.index(qid)
         results = copy.deepcopy(self.query_process_results[ind])
-        self.query_process_list[ind] = -1
-        self.query_process_results[ind] = []
         return results
     
+    def delete_entry_from_proc_list(self, qid):
+        # Deletes process and results from query_process_list if it exists
+        if(qid in self.query_process_list):
+            ind = self.query_process_list.index(qid)
+            self.query_process_list[ind] = -1
+            self.query_process_results[ind] = []
+            return True
+        else
+            return False
+
     def status(self, qid):
         if not self.exists(qid):
             return -2
@@ -392,7 +401,8 @@ def plugin_request():
                 continue
     if not db_nodes:
         return jsonify({"status":"No database nodes active"}),500
-
+    
+    node_count = len(db_nodes)
     # Get the data being sent from the plugin
     sequence = request.data.decode('UTF-8')
     # Store sequence as a md5 hash
@@ -421,7 +431,8 @@ def plugin_request():
 
 @app.route('/node_data/<qid>', methods=['GET','POST'])
 def node_data(qid):
-    if request.method == 'POST':
+    if request.method == 'POST' and qtrack.exists(qid, check_queue=False):
+        
         # Process node data
         seq_hash = qid
         received_data = request.get_json()
@@ -430,13 +441,19 @@ def node_data(qid):
         results = received_data['results']
         qtrack.store_results(seq_hash, results)
         if qtrack.all_results_received(qid):
-            results_list = qtrack.pop_results(qid)
+            results_list = qtrack.get_results(qid)
             # Process results, then store with qid, ready for javascript
-            sorted_results = get_top_ten_results(results_list, qid)
-            data_ready = get_info_from_accession_ids_elink(sorted_results,user_email=email, api_key_string=api_key)
-            cache_data(qid, data_ready)
-            ready_results[qid] = data_ready
-            print("Results ready to be read")
+            try:
+                sorted_results = get_top_ten_results(results_list, qid)
+                data_ready = get_info_from_accession_ids_elink(sorted_results,user_email=email, api_key_string=api_key)
+                ready_results[qid] = data_ready
+                cache_data(qid, data_ready)
+                qtrack.delete_entry_from_proc_list(qid)
+                print("Results ready to be read")
+            except:
+                print("An error occured trying to process the request:\n")
+                print(traceback.format_exc())
+                qtrack.delete_entry_from_proc_list(qid)
             # Pop process from queue if there are waiting queries
             new_id = qtrack.insert_proc_from_queue()
             if new_id:
@@ -449,7 +466,9 @@ def node_data(qid):
             return jsonify({"status":"sent"}),200
         
         else:
-            return jsonify({"status":"waiting"}), 250 
+            return jsonify({"status":"waiting"}), 250
+    else:
+        return jsonify({"status":"Bad call to node data"}), 400
 
 
 @app.route('/plugin_poll/<qid>')
@@ -470,11 +489,13 @@ def plugin_poll(qid):
     else:
         status = qtrack.status(qid)
         if status == -2:
-            return jsonify({"State":"Loading..."}), 220
-        if status == -1:
+            return jsonify({"State":"Query not found"}), 220
+        elif status == -1:
             return jsonify({"State": "Query still in queue"}), 250
-        else:
-            return jsonify({"State": f"{status} out of {node_count} processes finished"}), 250
+        elif status >=0 and status < node_count:
+            return jsonify({"State": f"{status} out of {node_count} BLAST processes finished"}), 250
+        elif status == node_count:
+            return jsonify({"State": "Retrieving GenBank Files ..."}), 250
 
 
 if __name__ == '__main__':

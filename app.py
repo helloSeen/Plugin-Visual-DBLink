@@ -4,13 +4,17 @@ import requests as http_req
 import hashlib
 import copy
 import json
+import traceback
 from flask_cors import CORS
 
 app = Flask(__name__)
 
 CORS(app)
 
-commNode_url="http://13.58.13.190/"
+commNode_url="http://3.142.198.52/"
+
+
+
 
 @app.route("/status")
 def status():
@@ -48,17 +52,17 @@ def run():
     shallow_sbol = data['shallow_sbol']
     
     url = complete_sbol.replace('/sbol','')
-    
-    resp=http_req.get(url+r'/fasta', timeout=10)
-
-    fasta_file = resp.content
-    header = {'Content-Type':'text/plain'}
-    response = http_req.post(commNode_url+"plugin_request", fasta_file, headers=header, timeout=10)
-    qid = response.json()['qid']
-    cwd = os.getcwd()
-    filename = os.path.join(cwd, "index3.html")
-    
     try:
+    
+        resp=http_req.get(url+r'/fasta', timeout=10)
+
+        fasta_file = resp.content
+        header = {'Content-Type':'text/plain'}
+        response = http_req.post(commNode_url+"plugin_request", fasta_file, headers=header, timeout=10)
+        qid = response.json()['qid']
+        cwd = os.getcwd()
+        filename = os.path.join(cwd, "index3.html")
+    
         with open(filename, 'r') as htmlfile:
             result = htmlfile.read()
         result = result.replace("COMM_NODE_IP", commNode_url)
@@ -66,8 +70,11 @@ def run():
             
         return result
     except Exception as e:
-        print(e)
-        abort(400)
+        with open("error.html", 'r') as htmlfile:
+            result = htmlfile.read()
+        print(traceback.format_exc())
+        return result, 299
+
 
 
 if __name__ == "__main__":
