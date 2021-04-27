@@ -6,6 +6,7 @@ import json
 import re
 from Bio import Entrez
 import xml.etree.ElementTree as ET
+from os import listdir, remove, path, mkdir
 from flask_cors import CORS
 
 app = Flask(__name__)
@@ -284,6 +285,15 @@ def get_top_ten_results(results_list, qid):
 
     return {"qid":qid,"results":sorted_results_list}
 
+def cache_data(qid, data):
+    # Keep past 100 results, replace oldest queries
+    files = listdir('./cache')
+    if len(files) > 100:
+        oldest_file = min(files, key=os.path.getctime)
+        remove(os.path.abspath(oldest_file))
+    with open('./cache/'+ qid, 'w') as qfile:
+        json.dump(data, qfile)
+    
 
 class QueryTracker:
 
@@ -362,6 +372,8 @@ class QueryTracker:
         return False
 
 qtrack = QueryTracker(max_act_prot)
+if not path.isdir('./cache'):
+    mkdir('./cache')
 
 @app.route('/status')
 def index():
@@ -386,6 +398,9 @@ def plugin_request():
     # Store sequence as a md5 hash
     seq_hash = hashlib.md5(sequence.encode()).hexdigest()
     print("Got query from plugin "+seq_hash)
+    # Check if query in cache
+    if seq_hash in listdir('./cache'):
+        return jsonify({"qid":seq_hash}), 200
     # Add sequence hash to query tracker
     status = qtrack.new(seq_hash, sequence)
     # Check if duplicate request
@@ -419,6 +434,7 @@ def node_data(qid):
             # Process results, then store with qid, ready for javascript
             sorted_results = get_top_ten_results(results_list, qid)
             data_ready = get_info_from_accession_ids_elink(sorted_results,user_email=email, api_key_string=api_key)
+            cache_data(qid, data_ready)
             ready_results[qid] = data_ready
             print("Results ready to be read")
             # Pop process from queue if there are waiting queries
@@ -440,6 +456,11 @@ def node_data(qid):
 def plugin_poll(qid):
     # Check if processed results ready, if so, return genbank data with query number, otherwise, return just query number
     # and number of nodes waiting to hear back
+    if qid in listdir('./cache'):
+        with open('./cache/'+qid) as qfile:
+            jdata = json.load(qfile)
+        jdata["State"] = "Done"
+        return jsonify(jdata), 200
     if qid in ready_results:
         payload = ready_results.pop(qid)
         payload["State"] = "Done"
