@@ -1,0 +1,10 @@
+Click==7.0
+itsdangerous==1.1.0
+Jinja2==2.11
+MarkupSafe==1.1.1
+Werkzeug==0.16.1
+waitress==1.4.4
+Flask>=1.0.2
+requests>=2.25.1
+Flask-Cors>=3.0.10
+biopython>=1.78

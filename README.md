@@ -1,5 +1,5 @@
 # Plugin-Visual-GenBankLink
-![alt text](./gbpluginimg.jpg "Example GenBank Plugin Image")
+![alt text](./wiki/gbpluginimg.jpg "Example GenBank Plugin Image")
 
 ### A plugin to get related GenBank files to SynBioHub Components. 
 

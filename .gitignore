@@ -1,2 +1,7 @@
 __pycache__
 venv
+.vscode/*
+CommunicationServer/__pycache__/*
+CommunicationServer/DBIPs.txt
+PluginServer/CommIP.txt
+CommunicationServer/Entrez_User_Info.json
