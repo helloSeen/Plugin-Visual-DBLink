@@ -72,9 +72,9 @@ def run():
             result = result.replace("COMM_NODE_IP", commNode_url)
             result = result.replace("QUERY_ID", qid)
         else:
-        with open("error.html", 'r') as htmlfile:
-            result = htmlfile.read()
-            print(resp_content["status"])
+            with open("error.html", 'r') as htmlfile:
+                result = htmlfile.read()
+                print(resp_content["status"])
         return result
     except Exception as e:
         with open("error.html", 'r') as htmlfile:

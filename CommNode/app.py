@@ -393,24 +393,27 @@ def index():
 def plugin_request():
     # Process a plugin request
     if request.method == 'POST':
+        # Get the data being sent from the plugin
+        sequence = request.data.decode('UTF-8')
+        # Store sequence as a md5 hash
+        seq_hash = hashlib.md5(sequence.encode()).hexdigest()
+        # Check if query in cache
+        if seq_hash in listdir('./cache'):
+            return jsonify({"status":"success","qid":seq_hash}), 200
+
         for db_node in db_nodes:
             try:
                 response = http_req.get(db_node+"status", timeout=10)
             except (http_req.ReadTimeout, http_req.ConnectionError):
                 db_nodes.remove(db_node)
                 continue
-    if not db_nodes:
-        return jsonify({"status":"No database nodes active"}),500
+        if not db_nodes:
+            return jsonify({"status":"No database nodes active"}),500
     
     node_count = len(db_nodes)
-    # Get the data being sent from the plugin
-    sequence = request.data.decode('UTF-8')
-    # Store sequence as a md5 hash
-    seq_hash = hashlib.md5(sequence.encode()).hexdigest()
+
     print("Got query from plugin "+seq_hash)
-    # Check if query in cache
-    if seq_hash in listdir('./cache'):
-        return jsonify({"status":"success","qid":seq_hash}), 200
+
     # Add sequence hash to query tracker
     status = qtrack.new(seq_hash, sequence)
     # Check if duplicate request
