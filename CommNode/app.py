@@ -353,7 +353,7 @@ class QueryTracker:
             self.query_process_list[ind] = -1
             self.query_process_results[ind] = []
             return True
-        else
+        else:
             return False
 
     def status(self, qid):
