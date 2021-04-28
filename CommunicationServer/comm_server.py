@@ -29,7 +29,7 @@ with open("DBIPs.txt", "r") as f:
 __node_list = []
 # Appends each ip as an http: address to __node_list
 for db_ip in db_ip_list:
-    if db_ip != "\n":
+    if db_ip != "\n" and db_ip != "":
         __node_list.append(f"http://{db_ip}/")
 
 # Copies stored database nodes. Will be modified if database
