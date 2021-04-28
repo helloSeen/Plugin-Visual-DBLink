@@ -11,7 +11,7 @@ app = Flask(__name__)
 # Configure databse id and genbank fragment
 db = 'nt.00'
 nid = '1'
-HOME = Path.home()
+HOME = '/home/ec2-user/'
 # in seconds
 tout = 600
 
