@@ -36,7 +36,7 @@ for db_ip in db_ip_list:
 # nodes go down during run time
 db_nodes = copy.deepcopy(__node_list)
 
-# Number of database nodes. Used to determine how many 
+# Number of database nodes. Used to determine how many
 # responses the server expects to receive
 node_count = len(db_nodes)
 
@@ -46,11 +46,12 @@ max_act_prot = 5
 # Dict to store results ready to be read
 ready_results = {}
 
+
 def parse_pubmed_summary(pubmed_id, pubmed_obj):
-# This function searches through a dict of PubMed article summaries and finds the particular
-# PubMed article with the id pubmed_id. It then parses out the list of Authors
-# Journal, Publication Title, Consortium, Date of Publication, DOI, reference count,
-# and Online link (if they exist) and returns this as a dict
+    # This function searches through a dict of PubMed article summaries and finds the particular
+    # PubMed article with the id pubmed_id. It then parses out the list of Authors
+    # Journal, Publication Title, Consortium, Date of Publication, DOI, reference count,
+    # and Online link (if they exist) and returns this as a dict
 
     data = {}
     # Loop through each object and check if the id is the inputted id
@@ -68,7 +69,7 @@ def parse_pubmed_summary(pubmed_id, pubmed_obj):
             data["Journal"] = doc.get('FullJournalName')
             if consort:
                 data["Consortium"] = consort
-            # Gets date and converts it from 
+            # Gets date and converts it from
             # Year Month Day format to Month Day Year format
             ymd = doc.get("PubDate")
             if ymd is not None:
@@ -88,9 +89,9 @@ def parse_pubmed_summary(pubmed_id, pubmed_obj):
 
 
 def parse_nuccore_summary(nuccore_id, nuccore_obj):
-# This function searches through a dict of GenBank file summaries results and finds the particular
-# GenBank file with the id nuccore_id. It then parses out the definition
-# Locus, sequence length, and online link (if they exist) and returns this as a dict    
+    # This function searches through a dict of GenBank file summaries results and finds the particular
+    # GenBank file with the id nuccore_id. It then parses out the definition
+    # Locus, sequence length, and online link (if they exist) and returns this as a dict
     data = {}
     # Loop through each object and check if the id is the inputted id
     for doc in nuccore_obj:
@@ -106,18 +107,18 @@ def parse_nuccore_summary(nuccore_id, nuccore_obj):
             # Gets the Link
             data["Link"] = f"https://www.ncbi.nlm.nih.gov/nuccore/{nuccore_id}/"
             break
-    # Filters out any entries with no data  
+    # Filters out any entries with no data
     filtered_data = {key: val for key, val in data.items() if val is not None}
     return filtered_data
 
 
 def get_full_gb_info(accession_id_list, api_key_string=None):
-# This function performs a full search of a Genbank file. This is done in the case
-# that a GenBank file does not have any PubMed data assoicated with it. This usually
-# takes much longer than just getting the PubMed and GenBank summaries, so we prefer
-# to get the summaries if they return data.
-# Accession ID list is a list of accession IDs and api_key_string is the Entrez
-# api key, if provided
+    # This function performs a full search of a Genbank file. This is done in the case
+    # that a GenBank file does not have any PubMed data assoicated with it. This usually
+    # takes much longer than just getting the PubMed and GenBank summaries, so we prefer
+    # to get the summaries if they return data.
+    # Accession ID list is a list of accession IDs and api_key_string is the Entrez
+    # api key, if provided
 
     # Turn accession_id_list into a single string with comma-separated acccession IDs
     sep = ","
@@ -144,12 +145,11 @@ def get_full_gb_info(accession_id_list, api_key_string=None):
 
     # Large string of all GenBank files. Each file is separated by "//\n"
     combined_gb_files = resp.content.decode()
-    
+
     # Splits into list of strings with file data, removes trailing newline from list
     gb_file_list = combined_gb_files.split("//\n")
     if '\n' in gb_file_list:
         gb_file_list.remove('\n')
-
 
     # Initializes variable which will store final results
     payload = {}
@@ -243,13 +243,13 @@ def get_full_gb_info(accession_id_list, api_key_string=None):
 
 
 def get_info_from_accession_ids_elink(results_list, user_email=None, api_key_string=None):
-# This function takes the results list created from the output of the database nodes,
-# finds the associated data with each GenBank accession number, and adds it to the results list. 
-# This is done by either getting a summary of the GenBank and PubMed articles, or by searching the
-# entire GenBank page, depending on if the summaries return data. 
-# results_list is a dict containing all accession numbers to check
-# user_email is the user's email for Entrez identifying the current user
-# api_key_string is the string for the api key
+    # This function takes the results list created from the output of the database nodes,
+    # finds the associated data with each GenBank accession number, and adds it to the results list.
+    # This is done by either getting a summary of the GenBank and PubMed articles, or by searching the
+    # entire GenBank page, depending on if the summaries return data.
+    # results_list is a dict containing all accession numbers to check
+    # user_email is the user's email for Entrez identifying the current user
+    # api_key_string is the string for the api key
 
     # Stores results list for appending data without making changes if an error occurs
     payload = copy.deepcopy(results_list)
@@ -257,7 +257,7 @@ def get_info_from_accession_ids_elink(results_list, user_email=None, api_key_str
     accession_id_list = []
     for doc in payload['results']:
         accession_id_list.append(doc['accession'])
-    
+
     # Turn accession_id_list into a single string with comma-separated acccession IDs
     sep = ","
     accession_ids = sep.join(accession_id_list)
@@ -315,7 +315,7 @@ def get_info_from_accession_ids_elink(results_list, user_email=None, api_key_str
     # List to hold GenBank ids that will be searched via summary
     summ_search_nuccore_ids = []
     # List to hold GenBank ids that will be searched via a full search of the
-    # GenBank file (if no PubMed articles found) 
+    # GenBank file (if no PubMed articles found)
     full_search_nuccore_ids = []
 
     # For each genbank file with associated pubmed ids, store its assoicated data,
@@ -345,12 +345,12 @@ def get_info_from_accession_ids_elink(results_list, user_email=None, api_key_str
     # Assembles summary and full search data in payload
     for i, nuccore_id in enumerate(accession_id_list):
         # If the GenBank data was found via summary, store data
-        # with PubMed summary 
+        # with PubMed summary
         if nuccore_id in summ_search_nuccore_ids:
             nuccore_id_data = parse_nuccore_summary(
                 nuccore_id, summ_genbank_data)
             nuccore_id_data["pubdata"] = nuccore_pubmed[nuccore_id]
-        # If the GenBank data was found via a full search, 
+        # If the GenBank data was found via a full search,
         # store data with results from full search
         elif nuccore_id in full_search_nuccore_ids:
             nuccore_id_data = full_genbank_data[nuccore_id]
@@ -360,9 +360,9 @@ def get_info_from_accession_ids_elink(results_list, user_email=None, api_key_str
 
 
 def get_top_ten_results(results_list, qid):
-# This function takes all of the results received from the
-# database nodes, sorts them by their score (assigned by BLAST),
-# and, if there are more than 10 returned results, takes only the top 10
+    # This function takes all of the results received from the
+    # database nodes, sorts them by their score (assigned by BLAST),
+    # and, if there are more than 10 returned results, takes only the top 10
 
     combined_results_list = []
     # Puts all results in singluar list
@@ -379,8 +379,8 @@ def get_top_ten_results(results_list, qid):
 
 
 def cache_data(qid, data):
-# This function stores up to 100 results in the cache directory, 
-# identified by their id
+    # This function stores up to 100 results in the cache directory,
+    # identified by their id
     files = listdir('./cache')
     # Keeps past 100 results, replace oldest queries
     if len(files) > 100:
@@ -392,11 +392,15 @@ def cache_data(qid, data):
 
 
 class QueryTracker:
-# This class is used to keep track of all requests made to the plugin to process data
+    # This class is used to keep track of all requests made to the plugin to process data
     def __init__(self, max_act_proc):
+        # List to store all requests being actively worked on
         self.query_process_list = [-1]*max_act_proc
-        # Make queue also store the sequence data ... otherwise cannot process it ...
+        # Queue implemented as a list. It stores any processes that are pending if the query
+        # process list is full
         self.query_process_queue = []
+        # List of lists that store results. Results are stored according to the index of
+        # that query's id in the query process list
         self.query_process_results = [[] for i in range(max_act_proc)]
 
     def exists(self, qid, check_list=True, check_queue=True):
@@ -407,6 +411,7 @@ class QueryTracker:
             return False
 
     def queue_len(self):
+        # Returns how many processes are in the queue
         return len(self.query_process_queue)
 
     def new(self, qid, sequence):
@@ -451,6 +456,11 @@ class QueryTracker:
             return False
 
     def status(self, qid):
+        # Returns the status of a given request
+        # -2 means the process does not exist
+        # -1 means the process is in the queue
+        # A positive, non-zero integer means how many
+        # requests have been received from the db nodes
         if not self.exists(qid):
             return -2
         print(self.query_process_list)
@@ -475,7 +485,9 @@ class QueryTracker:
         return False
 
 
+# Initializes the query tracker
 qtrack = QueryTracker(max_act_prot)
+# Makes the cache directory if it doesn't already exist
 if not path.isdir('./cache'):
     mkdir('./cache')
 
@@ -488,7 +500,8 @@ def index():
 
 @app.route('/plugin_request', methods=['GET', 'POST'])
 def plugin_request():
-    # Process a plugin request
+    # Endpoint for Plugin server to send FASTA file. Sends back
+    # the query id if successful
     if request.method == 'POST':
         # Get the data being sent from the plugin
         sequence = request.data.decode('UTF-8')
@@ -497,21 +510,26 @@ def plugin_request():
         # Check if query in cache
         if seq_hash in listdir('./cache'):
             return jsonify({"status": "success", "qid": seq_hash}), 200
-
+        # Checks if any database node cannot be reached
+        # If not, the node's IP address is removed from the list of database
+        # nodes
         for db_node in db_nodes:
             try:
                 response = http_req.get(db_node+"status", timeout=10)
             except (http_req.ReadTimeout, http_req.ConnectionError):
                 db_nodes.remove(db_node)
                 continue
+        # If no database nodes are left in the list, return that the db nodes
+        # are not active
         if not db_nodes:
             return jsonify({"status": "No database nodes active"}), 500
 
+    # Recalculates count of database servers in case some are inactive
     node_count = len(db_nodes)
 
     print("Got query from plugin "+seq_hash)
 
-    # Add sequence hash to query tracker
+    # Add sequence hash to query tracker (aka query id or qid)
     status = qtrack.new(seq_hash, sequence)
     # Check if duplicate request
     if(status == -1):
@@ -531,27 +549,37 @@ def plugin_request():
 
 @app.route('/node_data/<qid>', methods=['GET', 'POST'])
 def node_data(qid):
-    if request.method == 'POST' and qtrack.exists(qid, check_queue=False):
+    # Endpoint for the database servers to send the found GenBank IDs.
+    # Once results received from all db servers, the GenBank data
+    # for the top ten results is retrieved
 
-        # Process node data
+    if request.method == 'POST' and qtrack.exists(qid, check_queue=False):
+        # Stores results from database node
         seq_hash = qid
         received_data = request.get_json()
         node_id = received_data['nid']
         print("Received results from " + str(node_id))
         results = received_data['results']
         qtrack.store_results(seq_hash, results)
+        # If all results are received, process the results
         if qtrack.all_results_received(qid):
             results_list = qtrack.get_results(qid)
-            # Process results, then store with qid, ready for javascript
             try:
+                # Gets the top ten results by score among all results
                 sorted_results = get_top_ten_results(results_list, qid)
+                # Gets the related GenBank information from the top ten results
                 data_ready = get_info_from_accession_ids_elink(
                     sorted_results, user_email=email, api_key_string=api_key)
+                # Makes the data available to the javascript
                 ready_results[qid] = data_ready
+                # Caches data
                 cache_data(qid, data_ready)
+                # Removes entry from queue after processing is done
                 qtrack.delete_entry_from_proc_list(qid)
                 print("Results ready to be read")
             except:
+                # In the event of any error, prints traceback and removes
+                # entry from the process list
                 print("An error occured trying to process the request:\n")
                 print(traceback.format_exc())
                 qtrack.delete_entry_from_proc_list(qid)
@@ -566,7 +594,6 @@ def node_data(qid):
                         url_post, new_id['sequence'], headers=header)
 
             return jsonify({"status": "sent"}), 200
-
         else:
             return jsonify({"status": "waiting"}), 250
     else:
@@ -575,19 +602,24 @@ def node_data(qid):
 
 @app.route('/plugin_poll/<qid>')
 def plugin_poll(qid):
-    # Check if processed results ready, if so, return genbank data with query number, otherwise, return just query number
-    # and number of nodes waiting to hear back
+    # Checks if processed results ready, if so, return genbank data with query number,
+    # otherwise, return just query number and number of nodes waiting to hear back
+
+    # If file is in the cache, return it
     if qid in listdir('./cache'):
         with open('./cache/'+qid) as qfile:
             jdata = json.load(qfile)
         jdata["State"] = "Done"
         return jsonify(jdata), 200
+    # If the file is ready to be read, respond to the
+    # javascript file with the results
     if qid in ready_results:
         payload = ready_results.pop(qid)
         payload["State"] = "Done"
         # Check if needs to be turned into string
         print(payload)
         return jsonify(payload), 200
+    # Otherwise, print the status of the provided query id
     else:
         status = qtrack.status(qid)
         if status == -2:
